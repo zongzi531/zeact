@@ -1,0 +1,9 @@
+{
+  "name": "zeact",
+  "description": "Zeact is a JavaScript library to learn the source code of React.",
+  "version": "0.3.0",
+  "main": "index.js",
+  "repository": "https://github.com/zongzi531/zeact.git",
+  "author": "zongzi531 <zongzi.xy@gmail.com>",
+  "license": "MIT"
+}
