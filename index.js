@@ -1,6 +1,6 @@
 import { v } from './src/v'
 
 export default {
-  name: 'zeact',
+  name: 'Zzeact',
   v,
 }
