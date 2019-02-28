@@ -1,11 +1,24 @@
 const rollup = require('rollup')
+const rollupPluginNodeResolve = require('rollup-plugin-node-resolve')
+const rollupPluginBabel = require('rollup-plugin-babel')
+const rollupPluginJson = require('rollup-plugin-json')
+const rollupPluginUglify = require('rollup-plugin-uglify')
 
 const inputOptions = {
-  input: 'index.js',
+  input: 'main.js',
+  plugins: [
+    rollupPluginNodeResolve(),
+    rollupPluginBabel({
+      exclude: 'node_modules/**' // only transpile our source code
+    }),
+    rollupPluginJson(),
+    rollupPluginUglify.uglify(),
+  ],
 }
 const outputOptions = {
-  file: 'dist/index.js',
+  file: 'dist/main.js',
   format: 'cjs',
+  sourcemap: true,
 }
 
 const build = async () => {
