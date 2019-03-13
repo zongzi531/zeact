@@ -1,7 +1,7 @@
 import { version as VERSION } from './package.json'
-import { name } from './src'
+import Zzeact from '@/core/Zzeact'
 
 export default {
+  ...Zzeact,
   VERSION,
-  name,
 }
