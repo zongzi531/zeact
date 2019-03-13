@@ -1,0 +1,11 @@
+examples/
+node_modules/
+scripts/
+src/
+.babelrc
+.gitignore
+main.js
+yarn.lock
+yarn-error.log
+.vscode/
+.DS_Store

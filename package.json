@@ -1,8 +1,8 @@
 {
   "name": "zzeact",
   "description": "Zzeact is a JavaScript library to learn the source code of React.",
-  "version": "0.3.0",
-  "main": "main.js",
+  "version": "0.3.1",
+  "main": "dist/Zzeact.umd.js",
   "repository": "https://github.com/zongzi531/zzeact.git",
   "author": "zongzi531 <zongzi.xy@gmail.com>",
   "license": "MIT",
