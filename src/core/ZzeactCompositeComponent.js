@@ -1,8 +1,26 @@
-import invariant from '@/vendor/invariant'
+import invariant from '@/vendor/core/invariant'
 import ZzeactComponent from './ZzeactComponent'
+import ZzeactCurrentOwner from './ZzeactCurrentOwner'
+
+const ZzeactCompositeComponentMixin = {
+  mountComponent(rootID) {
+    ZzeactComponent.Mixin.mountComponent.call(this, rootID)
+    this._renderedComponent = this._renderValidatedComponent()
+    // 在这里调用的是，ZzeactNativeComponent.Mixin的mountComponent方法
+    return this._renderedComponent.mountComponent(rootID)
+  },
+  _renderValidatedComponent() {
+    // ZzeactCurrentOwner.current 这一步赋值我不是很理解
+    ZzeactCurrentOwner.current = this
+    const renderedComponent = this.render()
+    ZzeactCurrentOwner.current = null
+    return renderedComponent
+  }
+}
 
 class ZzeactCompositeComponentBase {}
 Object.assign(ZzeactCompositeComponentBase.prototype, ZzeactComponent.Mixin)
+Object.assign(ZzeactCompositeComponentBase.prototype, ZzeactCompositeComponentMixin)
 
 const ZzeactCompositeComponent = {
   /**
@@ -10,26 +28,33 @@ const ZzeactCompositeComponent = {
    * @param {*} props
    */
   createClass: (spec = {}) => {
+
+    invariant(
+      spec.render,
+      'createClass(...): Class specification must implement a `render` method.'
+    )
+
     class Constructor {
       constructor(initialProps, children) {
-        this.initialProps = initialProps
-        this.children = children
+        // 当createClass方法返回的函数被再次调用时，也调用这个方法
+        // 例如：挂在到DOM节点上
+        // Zzeact.renderComponent(
+        //   *ConvenienceConstructor()*,
+        //   document.getElementById('container')
+        // )
+        this.construct(initialProps, children)
       }
     }
 
-    /**
-     * 源码这个位置使用的是 `mixSpecIntoComponent` 方法，
-     * 在上方合并 `CompositeComponentBase` 时使用的 `mixInto` 方法，
-     * 这些方法功能有所雷同在关于为类添加 `prototype` 属性时，
-     * 这里使用 `Object.assign` 方法来实现，覆盖 `prototype` 属性则使用 `Object.setPrototypeOf` 来实现
-     */
-    Object.setPrototypeOf(Constructor.prototype, Object.getPrototypeOf(new ZzeactCompositeComponentBase()))
-    Object.assign(Constructor.prototype, { constructor: Constructor }, spec)
-
-    invariant(
-      Constructor.prototype.render,
-      'createClass(...): Class specification must implement a `render` method.'
-    )
+  /**
+   * 源码`mixSpecIntoComponent`和`mixInto`，这里使用`Object.assign`代替
+   * 直接对`prototype`进行赋值不能使用 **`Object.setPrototypeOf`** 代替，
+   * 因为其修改的是 **`Object.prototype.__proto__`**
+   * https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
+   */
+    Constructor.prototype = new ZzeactCompositeComponentBase()
+    Constructor.prototype.constructor = Constructor
+    Object.assign(Constructor.prototype, spec)
 
     /**
      * 这里之所以没有使用 `class` 代替，是因为在后面调用时候省略 `new` 操作符

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Zzeact Examples</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="./Zzeact.umd.js"></script>
+    <script src="./main.js"></script>
   </head>
   <body>
     <div id="container">
@@ -13,10 +13,19 @@
     </div>
     <script>
       var Examples = Zzeact.createClass({
-        render: () => console.log('render')
+        render: () => Zzeact.DOM.p(
+          {
+            style: {
+              margin: 0,
+              fontSize: 16,
+              color: 'red'
+            }
+          },
+          'Zzeact is rendered'
+        )
       })
       Zzeact.renderComponent(
-        Examples({ props: 'props' }, 'children'),
+        Examples(null, 'children'),
         document.getElementById('container')
       )
     </script>

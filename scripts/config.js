@@ -19,7 +19,7 @@ const inputOptions = {
 }
 
 const outputOptions = {
-  file: 'dist/Zzeact.umd.js',
+  file: 'dist/main.js',
   format: 'umd',
   name: 'Zzeact',
   sourcemap: true,
