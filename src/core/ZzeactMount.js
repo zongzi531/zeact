@@ -33,6 +33,11 @@ const ZzeactMount = {
   },
   registerContainer: (container) => {
     let zzeactRootID = getZzeactRootID(container)
+    // 这一块逻辑暂时还没有遇到，先写好
+    // 这个方法功能OK
+    if (zzeactRootID) {
+      zzeactRootID = ZzeactInstanceHandles.getZzeactRootIDFromNodeID(zzeactRootID)
+    }
     if (!zzeactRootID) {
       zzeactRootID = ZzeactInstanceHandles.getZzeactRootID(globalMountPointCounter++)
     }

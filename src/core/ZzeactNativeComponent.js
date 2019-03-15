@@ -15,11 +15,11 @@ export default class ZzeactNativeComponent {
 }
 
 ZzeactNativeComponent.Mixin = {
-  mountComponent (rootID) {
-    ZzeactComponent.Mixin.mountComponent.call(this, rootID)
+  mountComponent (rootID, transaction) {
+    ZzeactComponent.Mixin.mountComponent.call(this, rootID, transaction)
     return (
       this._createOpenTagMarkup() +
-      this._createContentMarkup() +
+      this._createContentMarkup(transaction) +
       this._tagClose
     )
   },
@@ -29,7 +29,6 @@ ZzeactNativeComponent.Mixin = {
     let ret = this._tagOpen
 
     for (const propKey in props) {
-      // 注册 Event 似乎是从这里注册的
       if (!props.hasOwnProperty(propKey)) {
         continue
       }
@@ -37,11 +36,17 @@ ZzeactNativeComponent.Mixin = {
       if (propValue == null) {
         continue
       }
-      if (propKey === STYLE) {
-        if (propValue) {
-          propValue = props.style = merge(props.style)
+      // eslint-disable-next-line no-constant-condition
+      if (false/** registrationNames[propKey] */) {
+        // 注册 Event
+        // putListener(this._rootNodeID, propKey, propValue)
+      } else {
+        if (propKey === STYLE) {
+          if (propValue) {
+            propValue = props.style = merge(props.style)
+          }
+          propValue = CSSPropertyOperations.createMarkupForStyles(propValue)
         }
-        propValue = CSSPropertyOperations.createMarkupForStyles(propValue)
         const markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue)
         if (markup) {
           ret += ' ' + markup

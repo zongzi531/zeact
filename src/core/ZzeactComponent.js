@@ -3,7 +3,9 @@ const ZzeactComponent = {
     construct (initialProps, children) {
       // 这里没有使用函数默认参数时因为`initialProps`可能为`null`
       this.props = initialProps || {}
-      this.props.children = children
+      if (typeof children !== 'undefined') {
+        this.props.children = children
+      }
       // **查看源码发现这里并没有写完，这个是由ReactCompositeComponentMixin下调起**
       // 会初始化state及生命周期
     },

@@ -1,33 +1,18 @@
 <!DOCTYPE html>
-  <html>
+<html>
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Zzeact Examples</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="./main.js"></script>
+    <link rel="stylesheet" href="./shared/css/base.css" />
   </head>
   <body>
-    <div id="container">
-      <p>Zzeact is not loaded.</p>
-    </div>
-    <script>
-      var Examples = Zzeact.createClass({
-        render: () => Zzeact.DOM.p(
-          {
-            style: {
-              margin: 0,
-              fontSize: 16,
-              color: 'red'
-            }
-          },
-          'Zzeact is rendered'
-        )
-      })
-      Zzeact.renderComponent(
-        Examples(null, 'children'),
-        document.getElementById('container')
-      )
-    </script>
+    <h1>Zzeact Examples</h1>
+    <ul>
+      <li><a href="basic.html">Basic Example</a></li>
+      <li><a href="basic-jsx.html">Basic JSX Example</a></li>
+      <li><a href="basic-jsx-multi-level.html">Basic JSX Multi Level Example</a></li>
+    </ul>
   </body>
 </html>
