@@ -112,7 +112,7 @@ const DOMAttributeNames = {
 
 const DOMPropertyNames = {
   autoComplete: 'autocomplete',
-  spellCheck: 'spellcheck'
+  spellCheck: 'spellcheck',
 }
 
 const DOMMutationMethods = {

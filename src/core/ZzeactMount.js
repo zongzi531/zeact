@@ -38,7 +38,7 @@ const ZzeactMount = {
     }
     containersByZzeactRootID[zzeactRootID] = container
     return zzeactRootID
-  }
+  },
 }
 
 export default ZzeactMount

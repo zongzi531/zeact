@@ -4,7 +4,7 @@ const ESCAPE_LOOKUP = {
   '<': '&lt;',
   '"': '&quot;',
   '\'': '&#x27;',
-  '/': '&#x2f;'
+  '/': '&#x2f;',
 }
 
 const escaper = match => ESCAPE_LOOKUP[match]

@@ -7,7 +7,7 @@ import keyOf from '@/vendor/core/keyOf'
 const STYLE = keyOf({ style: null })
 
 export default class ZzeactNativeComponent {
-  constructor(tag, omitClose) {
+  constructor (tag, omitClose) {
     this._tagOpen = `<${tag} `
     this._tagClose = omitClose ? '' : `</${tag}>`
     this.tagName = tag.toUpperCase()
@@ -15,16 +15,16 @@ export default class ZzeactNativeComponent {
 }
 
 ZzeactNativeComponent.Mixin = {
-  mountComponent(rootID) {
+  mountComponent (rootID) {
     ZzeactComponent.Mixin.mountComponent.call(this, rootID)
     return (
-      this._createOpenTagMarkup() + 
+      this._createOpenTagMarkup() +
       this._createContentMarkup() +
       this._tagClose
     )
   },
   // 创建标签开始标记
-  _createOpenTagMarkup() {
+  _createOpenTagMarkup () {
     const props = this.props
     let ret = this._tagOpen
 
@@ -55,7 +55,7 @@ ZzeactNativeComponent.Mixin = {
     return `${ret} id="${this._rootNodeID}">`
   },
   // 创建标签内容标记（暂时还没写）
-  _createContentMarkup() {
+  _createContentMarkup () {
     return this.props.children
     // return ''
   },

@@ -4,7 +4,7 @@ const memoizeStringOnly = callback => {
     if (cache.hasOwnProperty(string)) {
       return cache[string]
     } else {
-      return cache[string] = callback.call(this, string)
+      return (cache[string] = callback.call(this, string))
     }
   }
 }

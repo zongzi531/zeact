@@ -6,8 +6,8 @@ const CSSProperty = {
     orphans: true,
     textDecoration: true,
     zIndex: true,
-    zoom: true
-  }
+    zoom: true,
+  },
 }
 
 export default CSSProperty

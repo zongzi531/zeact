@@ -25,7 +25,7 @@ const ERRORS = {
     'circular structures in an unsupported way.',
   MERGE_DEEP_NO_ARR_STRATEGY:
     'You must provide an array strategy to deep merge functions to ' +
-    'instruct the deep merge how to resolve merging two arrays.'
+    'instruct the deep merge how to resolve merging two arrays.',
 }
 
 const isTerminal = o => typeof o !== 'object' || o === null
@@ -34,23 +34,23 @@ const mergeHelpers = {
   MAX_MERGE_DEPTH,
   isTerminal,
   normalizeMergeArg: arg => arg === undefined || arg === null ? {} : arg,
-  checkMergeArrayArgs(one, two) {
+  checkMergeArrayArgs (one, two) {
     throwIf(
       !Array.isArray(one) || !Array.isArray(two),
       ERRORS.MERGE_CORE_FAILURE
     )
   },
-  checkMergeObjectArgs(one, two) {
+  checkMergeObjectArgs (one, two) {
     mergeHelpers.checkMergeObjectArg(one)
     mergeHelpers.checkMergeObjectArg(two)
   },
-  checkMergeObjectArg(arg) {
+  checkMergeObjectArg (arg) {
     throwIf(isTerminal(arg) || Array.isArray(arg), ERRORS.MERGE_CORE_FAILURE)
   },
-  checkMergeLevel(level) {
+  checkMergeLevel (level) {
     throwIf(level >= MAX_MERGE_DEPTH, ERRORS.MERGE_DEEP_MAX_LEVELS)
   },
-  checkArrayStrategy(strategy) {
+  checkArrayStrategy (strategy) {
     throwIf(
       strategy !== undefined && !(strategy in mergeHelpers.ArrayStrategies),
       ERRORS.MERGE_DEEP_NO_ARR_STRATEGY
@@ -58,7 +58,7 @@ const mergeHelpers = {
   },
   ArrayStrategies: keyMirror({
     Clobber: true,
-    IndexByIndex: true
+    IndexByIndex: true,
   }),
   ERRORS,
 }

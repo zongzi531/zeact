@@ -9,6 +9,7 @@ Zzeact is a JavaScript library to learn the source code of React.
 - [ ] LifeCycle
 - [ ] React Components
 - [ ] Components Update
+- [ ] JSX
 
 ## Install
 

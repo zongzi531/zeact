@@ -3,7 +3,7 @@ import objMapKeyVal from '@/utils/objMapKeyVal'
 
 const createDOMComponentClass = (tag, omitClose) => {
   class Constructor {
-    constructor(initialProps, children) {
+    constructor (initialProps, children) {
       // 原生DOM节点也会调这个
       this.construct(initialProps, children)
     }
@@ -101,7 +101,7 @@ const ZzeactDOM = objMapKeyVal({
   polyline: false,
   rect: false,
   svg: false,
-  text: false
+  text: false,
 }, createDOMComponentClass)
 
 export default ZzeactDOM

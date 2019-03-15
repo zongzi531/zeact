@@ -9,11 +9,11 @@ const inputOptions = {
   plugins: [
     rollupPluginNodeResolve(),
     rollupPluginBabel({
-      exclude: 'node_modules/**' // only transpile our source code
+      exclude: 'node_modules/**', // only transpile our source code
     }),
     rollupPluginJson(),
     rollupPluginAlias({
-      '@': path.join(__dirname, '../src')
+      '@': path.join(__dirname, '../src'),
     }),
   ],
 }

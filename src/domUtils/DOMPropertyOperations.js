@@ -5,9 +5,9 @@ import escapeTextForBrowser from '@/utils/escapeTextForBrowser'
 const processAttributeNameAndPrefix = memoizeStringOnly(name => escapeTextForBrowser(name) + '="')
 
 const DOMPropertyOperations = {
-  createMarkupForProperty(name, value) {
+  createMarkupForProperty (name, value) {
     if (DOMProperty.isStandardName[name]) {
-      if (value == null || DOMProperty.hasBooleanValue[name] && !value) {
+      if ((value == null || DOMProperty.hasBooleanValue[name]) && !value) {
         return ''
       }
       const attributeName = DOMProperty.getAttributeName[name]
@@ -22,7 +22,7 @@ const DOMPropertyOperations = {
     } else {
       return null
     }
-  }
+  },
 }
 
 export default DOMPropertyOperations

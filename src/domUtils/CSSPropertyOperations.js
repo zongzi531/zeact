@@ -6,7 +6,7 @@ import memoizeStringOnly from '@/utils/memoizeStringOnly'
 const processStyleName = memoizeStringOnly(styleName => escapeTextForBrowser(hyphenate(styleName)))
 
 const CSSPropertyOperations = {
-  createMarkupForStyles(styles) {
+  createMarkupForStyles (styles) {
     let serialized = ''
     for (const styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -19,7 +19,7 @@ const CSSPropertyOperations = {
       }
     }
     return serialized
-  }
+  },
 }
 
 export default CSSPropertyOperations
