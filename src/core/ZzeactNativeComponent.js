@@ -1,8 +1,13 @@
 import ZzeactComponent from './ZzeactComponent'
 import CSSPropertyOperations from '@/domUtils/CSSPropertyOperations'
-import DOMPropertyOperations from '../domUtils/DOMPropertyOperations'
+import DOMPropertyOperations from '@/domUtils/DOMPropertyOperations'
 import merge from '@/utils/merge'
 import keyOf from '@/vendor/core/keyOf'
+import escapeTextForBrowser from '@/utils/escapeTextForBrowser'
+import flattenChildren from '@/utils/flattenChildren'
+import ZzeactMultiChild from './ZzeactMultiChild'
+
+const CONTENT_TYPES = { 'string': true, 'number': true }
 
 const STYLE = keyOf({ style: null })
 
@@ -60,11 +65,37 @@ ZzeactNativeComponent.Mixin = {
     return `${ret} id="${this._rootNodeID}">`
   },
   // 创建标签内容标记（暂时还没写）
-  _createContentMarkup () {
-    return this.props.children
-    // return ''
+  _createContentMarkup (transaction) {
+    // 一开始我认为 transaction 是影响到子组件的显示，但是其实发现并不是
+    // transaction 只是在执行每个组件自己的一个过程而已
+    const innerHTML = this.props.dangerouslySetInnerHTML
+    if (innerHTML != null) {
+      if (innerHTML.__html != null) {
+        return innerHTML.__html
+      }
+    } else {
+      const contentToUse = this.props.content != null
+        ? this.props.content
+        : CONTENT_TYPES[typeof this.props.children]
+          ? this.props.children
+          : null
+      const childrenToUse = contentToUse != null
+        ? null
+        : this.props.children
+      if (contentToUse != null) {
+        return escapeTextForBrowser(contentToUse)
+      } else if (childrenToUse != null) {
+        // 影响子组件的显示是依靠这个，但是这里会接受到一个数组呢
+        return this.mountMultiChild(
+          flattenChildren(childrenToUse),
+          transaction
+        )
+      }
+    }
+    return ''
   },
 }
 
 Object.assign(ZzeactNativeComponent.prototype, ZzeactComponent.Mixin)
 Object.assign(ZzeactNativeComponent.prototype, ZzeactNativeComponent.Mixin)
+Object.assign(ZzeactNativeComponent.prototype, ZzeactMultiChild.Mixin)

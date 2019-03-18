@@ -1,3 +1,17 @@
+import throwIf from '@/utils/throwIf'
+
+const DUAL_TRANSACTION =
+  'Cannot initialize transaction when there is already an outstanding ' +
+  'transaction. Common causes of this are trying to render a component ' +
+  'when you are already rendering a component or attempting a state ' +
+  'transition while in a render function. Another possibility is that ' +
+  'you are rendering new content (or state transitioning) in a ' +
+  'componentDidRender callback. If this is not the case, please report the ' +
+  'issue immediately.'
+
+const MISSING_TRANSACTION =
+  'Cannot close transaction when there is none open.'
+
 /**
  * `Transaction` creates a black box that is able to wrap any method such that
  * certain invariants are maintained before and after the method is invoked
@@ -62,10 +76,126 @@
  *
  * @class Transaction
  */
-const Mixin = {}
+const Mixin = {
+  // 用于判断当前 Transaction 状态，是可以执行相应的方法，比如：
+  // 执行 perform 时要确保 _isInTransaction 为 false，反之
+  _isInTransaction: false,
+  // 默认是 null，又外部传入，方法来获取 TransactionWrappers，是一个数组
+  // 因为在 initializeAll 和 closeAll 需要使用到
+  getTransactionWrappers: null,
+  // 重新初始化方法
+  reinitializeTransaction () {
+    this.transactionWrappers = this.getTransactionWrappers()
+    if (!this.wrapperInitData) {
+      this.wrapperInitData = []
+    } else {
+      this.wrapperInitData.length = 0
+    }
+    if (!this.timingMetrics) {
+      this.timingMetrics = {}
+    }
+    this.timingMetrics.methodInvocationTime = 0
+    if (!this.timingMetrics.wrapperInitTimes) {
+      this.timingMetrics.wrapperInitTimes = []
+    } else {
+      this.timingMetrics.wrapperInitTimes.length = 0
+    }
+    if (!this.timingMetrics.wrapperCloseTimes) {
+      this.timingMetrics.wrapperCloseTimes = []
+    } else {
+      this.timingMetrics.wrapperCloseTimes.length = 0
+    }
+    this._isInTransaction = false
+  },
+  isInTransaction () {
+    return !!this._isInTransaction
+  },
+  perform (method, scope, a, b, c, d, e, f) {
+    throwIf(this.isInTransaction(), DUAL_TRANSACTION)
+    const memberStart = Date.now()
+    let err = null
+    let ret
+    try {
+      this.initializeAll()
+      ret = method.call(scope, a, b, c, d, e, f)
+    } catch (ieRequiresCatch) {
+      err = err || ieRequiresCatch
+    } finally {
+      const memberEnd = Date.now()
+      this.methodInvocationTime += (memberEnd - memberStart)
+      try {
+        this.closeAll()
+      } catch (closeAllErr) {
+        err = err || closeAllErr
+      }
+    }
+    if (err) {
+      throw err
+    }
+    return ret
+  },
+  initializeAll () {
+    // 初始化所有方法，按照次序执行 initialize 方法
+    // 按照目前的编写内容来看，执行顺序如下：
+    // SELECTION_RESTORATION
+    // EVENT_SUPPRESSION
+    // ON_DOM_READY_QUEUEING
+    this._isInTransaction = true
+    const { transactionWrappers } = this
+    const { wrapperInitTimes } = this.timingMetrics
+    let err = null
+    for (let i = 0; i < transactionWrappers.length; i++) {
+      const initStart = Date.now()
+      const wrapper = transactionWrappers[i]
+      try {
+        this.wrapperInitData[i] = wrapper.initialize ? wrapper.initialize.call(this) : null
+      } catch (initErr) {
+        err = err || initErr
+        this.wrapperInitData[i] = Transaction.OBSERVED_ERROR
+      } finally {
+        const curInitTime = wrapperInitTimes[i]
+        const initEnd = Date.now()
+        wrapperInitTimes[i] = (curInitTime || 0) + (initEnd - initStart)
+      }
+    }
+  },
+  closeAll () {
+    // 关闭所有方法，按照次序执行 close 方法
+    // 按照目前的编写内容来看，执行顺序如下：
+    // SELECTION_RESTORATION
+    // EVENT_SUPPRESSION
+    // ON_DOM_READY_QUEUEING
+    throwIf(!this.isInTransaction(), MISSING_TRANSACTION)
+    const { transactionWrappers } = this
+    const { wrapperCloseTimes } = this.timingMetrics
+    let err = null
+    for (let i = 0; i < transactionWrappers.length; i++) {
+      const closeStart = Date.now()
+      const wrapper = transactionWrappers[i]
+      const initData = this.wrapperInitData[i]
+      try {
+        if (initData !== Transaction.OBSERVED_ERROR) {
+          wrapper.close && wrapper.close.call(this, initData)
+        }
+      } catch (closeErr) {
+        err = err || closeErr
+      } finally {
+        const curCloseTime = wrapperCloseTimes[i]
+        const closeEnd = Date.now()
+        wrapperCloseTimes[i] = (curCloseTime || 0) + (closeEnd - closeStart)
+      }
+    }
+    this.wrapperInitData.length = 0
+    this._isInTransaction = false
+    if (err) {
+      throw err
+    }
+  },
+}
 
 const Transaction = {
   Mixin,
+  OBSERVED_ERROR: {},
 }
 
 export default Transaction

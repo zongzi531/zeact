@@ -24,16 +24,21 @@ const createDOMComponentClass = (tag, omitClose) => {
  * Zzeact.DOM.p(props, children)
  * ```
  * 这里通过工厂函数返回的都是原生DOM节点对应的函数
+ * 在编写 examples 时，对一些 HTML5 的标签进行了添加，
+ * 同样的，也有些标签是 `JSXTransformer.js` 没有包含的，
+ * 所以同时需要在 `JSXTransformer.js` 中进行添加即可
  */
 const ZzeactDOM = objMapKeyVal({
   a: false,
   abbr: false,
   address: false,
+  article: false,
   audio: false,
   b: false,
   body: false,
   br: true,
   button: false,
+  caption: false,
   code: false,
   col: true,
   colgroup: false,
@@ -45,6 +50,8 @@ const ZzeactDOM = objMapKeyVal({
   em: false,
   embed: true,
   fieldset: false,
+  figcaption: false,
+  figure: false,
   footer: false,
   // Danger: this gets monkeypatched! See ReactDOMForm for more info.
   form: false,
@@ -64,6 +71,7 @@ const ZzeactDOM = objMapKeyVal({
   legend: false,
   li: false,
   line: false,
+  main: false,
   nav: false,
   object: false,
   ol: false,
@@ -91,6 +99,7 @@ const ZzeactDOM = objMapKeyVal({
   tr: false,
   u: false,
   ul: false,
+  var: false,
   video: false,
   wbr: false,
 

@@ -3,11 +3,11 @@ import ZzeactComponent from './ZzeactComponent'
 import ZzeactCurrentOwner from './ZzeactCurrentOwner'
 
 const ZzeactCompositeComponentMixin = {
-  mountComponent (rootID) {
-    ZzeactComponent.Mixin.mountComponent.call(this, rootID)
+  mountComponent (rootID, transaction) {
+    ZzeactComponent.Mixin.mountComponent.call(this, rootID, transaction)
     this._renderedComponent = this._renderValidatedComponent()
     // 在这里调用的是，ZzeactNativeComponent.Mixin的mountComponent方法
-    return this._renderedComponent.mountComponent(rootID)
+    return this._renderedComponent.mountComponent(rootID, transaction)
   },
   _renderValidatedComponent () {
     // ZzeactCurrentOwner.current 这一步赋值我不是很理解

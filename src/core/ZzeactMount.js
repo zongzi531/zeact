@@ -20,6 +20,8 @@ const getZzeactRootID = (container) => {
 }
 
 const ZzeactMount = {
+  totalInstantiationTime: 0,
+  totalInjectionTime: 0,
   renderComponent: (nextComponent, container) => {
     const prevComponent = instanceByZzeactRootID[getZzeactRootID(container)]
     if (prevComponent) {

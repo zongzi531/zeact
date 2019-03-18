@@ -1,4 +1,4 @@
-import invariant from '../vendor/core/invariant'
+import invariant from '@/vendor/core/invariant'
 
 const DOMProperty = {
   isStandardName: {},
