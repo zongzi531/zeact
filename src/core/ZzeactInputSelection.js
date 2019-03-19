@@ -1,3 +1,4 @@
+// ZzeactInputSelection 相关的暂时也没理解
 const getActiveElement = () => {
   try {
     return document.activeElement
@@ -41,7 +42,7 @@ const ZzeactInputSelection = {
     let range
     if (input.contentEditable === 'true' && window.getSelection) {
       range = window.getSelection().getRangeAt(0)
-      var commonAncestor = range.commonAncestorContainer
+      let commonAncestor = range.commonAncestorContainer
       if (commonAncestor && commonAncestor.nodeType === 3) {
         commonAncestor = commonAncestor.parentNode
       }
@@ -65,7 +66,7 @@ const ZzeactInputSelection = {
       return { start: 0, end: 0 }
     }
 
-    var length = input.value.length
+    const length = input.value.length
 
     if (input.nodeName === 'INPUT') {
       return {
@@ -73,10 +74,10 @@ const ZzeactInputSelection = {
         end: -range.moveEnd('character', -length),
       }
     } else {
-      var range2 = range.duplicate()
+      const range2 = range.duplicate()
       range2.moveToElementText(input)
       range2.setEndPoint('StartToEnd', range)
-      var end = length - range2.text.length
+      const end = length - range2.text.length
       range2.setEndPoint('StartToStart', range)
       return {
         start: length - range2.text.length,
@@ -95,9 +96,9 @@ const ZzeactInputSelection = {
       // IE is inconsistent about character offsets when it comes to carriage
       // returns, so we need to manually take them into account
       if (input.tagName === 'TEXTAREA') {
-        var crBefore =
+        const crBefore =
           (input.value.slice(0, start).match(/\r/g) || []).length
-        var crInside =
+        const crInside =
           (input.value.slice(start, end).match(/\r/g) || []).length
         start -= crBefore
         end -= crBefore + crInside
@@ -113,7 +114,7 @@ const ZzeactInputSelection = {
           range = document.createRange()
           range.setStart(input.childNodes[0], start)
           range.setEnd(input.childNodes[0], end)
-          var sel = window.getSelection()
+          const sel = window.getSelection()
           sel.removeAllRanges()
           sel.addRange(range)
         }

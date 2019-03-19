@@ -48,7 +48,7 @@ const flattenChildren = (children) => {
   if (children === null || children === undefined) {
     return children
   }
-  var result = {}
+  const result = {}
   // 产出这个 result
   flattenChildrenImpl(result, children, '')
   return result

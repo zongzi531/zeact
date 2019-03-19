@@ -6,6 +6,9 @@ import keyOf from '@/vendor/core/keyOf'
 import escapeTextForBrowser from '@/utils/escapeTextForBrowser'
 import flattenChildren from '@/utils/flattenChildren'
 import ZzeactMultiChild from './ZzeactMultiChild'
+import ZzeactEvent from './ZzeactEvent'
+
+const { registrationNames, putListener } = ZzeactEvent
 
 const CONTENT_TYPES = { 'string': true, 'number': true }
 
@@ -41,10 +44,11 @@ ZzeactNativeComponent.Mixin = {
       if (propValue == null) {
         continue
       }
-      // eslint-disable-next-line no-constant-condition
-      if (false/** registrationNames[propKey] */) {
-        // 注册 Event
-        // putListener(this._rootNodeID, propKey, propValue)
+      // 因为还没有对 registrationNames 进行操作，
+      // 所以暂时没有办法进入该分支
+      // 调用 putListener
+      if (registrationNames[propKey]) {
+        putListener(this._rootNodeID, propKey, propValue)
       } else {
         if (propKey === STYLE) {
           if (propValue) {

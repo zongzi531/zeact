@@ -4,5 +4,5 @@ export default {
   canUseDOM,
   canUseWorkers: typeof Worker !== 'undefined',
   isInWorker: !canUseDOM,
-  global: (function () { return this })(),
+  global: new Function('return this;')(),
 }

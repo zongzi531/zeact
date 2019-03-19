@@ -1,4 +1,6 @@
 import ZzeactInstanceHandles from './ZzeactInstanceHandles'
+import ZzeactEvent from './ZzeactEvent'
+import ZzeactEventTopLevelCallback from './ZzeactEventTopLevelCallback'
 
 /**
  * 总共的挂在数量
@@ -22,18 +24,26 @@ const getZzeactRootID = (container) => {
 const ZzeactMount = {
   totalInstantiationTime: 0,
   totalInjectionTime: 0,
-  renderComponent: (nextComponent, container) => {
+  useTouchEvents: false,
+  prepareTopLevelEvents (TopLevelCallbackCreator) {
+    ZzeactEvent.ensureListening(ZzeactMount.useTouchEvents, TopLevelCallbackCreator)
+  },
+  renderComponent (nextComponent, container) {
     const prevComponent = instanceByZzeactRootID[getZzeactRootID(container)]
     if (prevComponent) {
       // 这里的逻辑暂时不写
       console.log(prevComponent)
     }
+
+    // 注册事件
+    ZzeactMount.prepareTopLevelEvents(ZzeactEventTopLevelCallback)
+
     const zzeactRootID = ZzeactMount.registerContainer(container)
     instanceByZzeactRootID[zzeactRootID] = nextComponent
     nextComponent.mountComponentIntoNode(zzeactRootID, container)
     return nextComponent
   },
-  registerContainer: (container) => {
+  registerContainer (container) {
     let zzeactRootID = getZzeactRootID(container)
     // 这一块逻辑暂时还没有遇到，先写好
     // 这个方法功能OK
