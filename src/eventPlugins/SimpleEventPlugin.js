@@ -7,10 +7,13 @@ const { topLevelTypes } = EventConstants
 
 // 简单事件类型的定义
 const SimpleEventPlugin = {
+  // 抽象事件类型
   abstractEventTypes: {
     // Note: We do not allow listening to mouseOver events. Instead, use the
     // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
+    // 实际上的事件名称
     mouseDown: {
+      // 注册的名称，及对应的 bubbled，captured
       phasedRegistrationNames: {
         bubbled: keyOf({ onMouseDown: true }),
         captured: keyOf({ onMouseDownCapture: true }),
@@ -134,10 +137,12 @@ const SimpleEventPlugin = {
    * @param {string} domID DOM id to pass to the callback.
    */
   executeDispatch (abstractEvent, listener, domID) {
+    // 在 EventPluginUtils 被调起
     // 这看起来是在监听事件的时候用的，并且挂在 listener 之前，像是会放在 putListener
     // 假如返回 false 的情况，
     // 默认调用 stopPropagation 和 preventDefault
     // 来阻止捕获和冒泡传播，同时阻止默认事件行为
+    // 这里会向监听方法传入 abstractEvent, domID
     const returnValue = listener(abstractEvent, domID)
     if (returnValue === false) {
       abstractEvent.stopPropagation()
@@ -149,8 +154,9 @@ const SimpleEventPlugin = {
    * @see EventPluginHub.extractAbstractEvents
    */
   extractAbstractEvents (topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
-    // 这个方法在干嘛暂时没看
+    // 这个方法是用来提取抽象事件的
     let data
+    // 首先判断是否是定义的抽象事件
     const abstractEventType =
       SimpleEventPlugin.topLevelTypesToAbstract[topLevelType]
     if (!abstractEventType) {
@@ -178,7 +184,9 @@ const SimpleEventPlugin = {
       default:
         data = null
     }
-    // 在这里 new 了 AbstractEvent
+    // 在经过上方的 switch ，可以为 data 赋值
+    // 在这里 new 了 AbstractEvent ，然后返回 AbstractEvent 实例化后的对象
+    // 就是用户操作参数的事件的抽象对象，当然里面的 nativeEvent 属性就是原生事件
     const abstractEvent = AbstractEvent.getPooled(
       abstractEventType,
       renderedTargetID,
@@ -186,6 +194,8 @@ const SimpleEventPlugin = {
       nativeEvent,
       data
     )
+
+    // 这个看起来就是去找事件
     EventPropagators.accumulateTwoPhaseDispatches(abstractEvent)
     return abstractEvent
   },

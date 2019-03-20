@@ -84,6 +84,10 @@ const Mixin = {
   // 因为在 initializeAll 和 closeAll 需要使用到
   getTransactionWrappers: null,
   // 重新初始化方法
+  // 看了下面代码可以不难发现，这里有在计时，记录 Init 和 Close 的时间
+  // 整个过程在 Init 时返回的内容都存储在 wrapperInitData 中，
+  // 在 Close 时再取出使用，再加上中间方法的执行
+  // 那么这里这么做的思想是什么呢？
   reinitializeTransaction () {
     this.transactionWrappers = this.getTransactionWrappers()
     if (!this.wrapperInitData) {

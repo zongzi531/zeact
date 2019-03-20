@@ -10,6 +10,8 @@ const INVALID_CHILD =
 const ONLY_CHILD_NAME = '0'
 
 const flattenChildrenImpl = (res, children, nameSoFar) => {
+  // 这里你会发现若 children 仅为一个的时候，他是 0
+  // 若为多个的时候，他是 [number]
   if (Array.isArray(children)) {
     for (let i = 0; i < children.length; i++) {
       flattenChildrenImpl(res, children[i], nameSoFar + '[' + i + ']')
@@ -25,6 +27,7 @@ const flattenChildrenImpl = (res, children, nameSoFar) => {
       res[storageName] = children
     } else {
       if (type === 'object') {
+        // 这一段不知道怎样的场景会遇到
         throwIf(children && children.nodeType === 1, INVALID_CHILD)
         for (let key in children) {
           if (children.hasOwnProperty(key)) {
@@ -35,6 +38,7 @@ const flattenChildrenImpl = (res, children, nameSoFar) => {
             )
           }
         }
+      // 当 children 的类型为 string 或是 number，最终都以 ZzeactTextComponent 输出
       } else if (type === 'string') {
         res[storageName] = new ZzeactTextComponent(children)
       } else if (type === 'number') {

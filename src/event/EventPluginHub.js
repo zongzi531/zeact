@@ -1,9 +1,11 @@
-// 这里在干嘛没看懂
 import CallbackRegistry from './CallbackRegistry'
 import accumulate from '@/utils/accumulate'
 import throwIf from '@/utils/throwIf'
 import EventPropagators from './EventPropagators'
 import merge from '@/utils/merge'
+import forEachAccumulated from '@/utils/forEachAccumulated'
+import EventPluginUtils from './EventPluginUtils'
+import AbstractEvent from './AbstractEvent'
 
 const ERRORS = {
   DOUBLE_REGISTER:
@@ -26,6 +28,9 @@ const registrationNames = {}
 
 const registrationNamesArr = []
 
+let abstractEventQueue = []
+
+// 这是一个工厂函数
 const recordAllRegistrationNames = (eventType, PluginModule) => {
   let phaseName
   const phasedRegistrationNames = eventType.phasedRegistrationNames
@@ -63,7 +68,9 @@ const injection = {
       const pluginIndex = injection.EventPluginOrder.indexOf(name)
       throwIf(pluginIndex === -1, ERRORS.DEPENDENCY_ERROR + name)
       if (!injection.plugins[pluginIndex]) {
+        // 在对应位置插入 PluginModule
         injection.plugins[pluginIndex] = PluginModule
+        // 并且遍历调用 recordAllRegistrationNames
         for (const eventName in PluginModule.abstractEventTypes) {
           const eventType = PluginModule.abstractEventTypes[eventName]
           recordAllRegistrationNames(eventType, PluginModule)
@@ -80,7 +87,7 @@ const injection = {
 }
 
 const extractAbstractEvents = (topLevelType, nativeEvent, renderedTargetID, renderedTarget) => {
-  // 这里在干嘛 看不懂
+  // 若存在 possiblePlugin 则创建 AbstractEvents 的实例
   let abstractEvents
   const plugins = injection.plugins
   const len = plugins.length
@@ -102,11 +109,46 @@ const extractAbstractEvents = (topLevelType, nativeEvent, renderedTargetID, rend
   return abstractEvents
 }
 
-const enqueueAbstractEvents = abstractEvents => {
-  // debugger
+const getPluginModuleForAbstractEvent = abstractEvent => {
+  if (abstractEvent.type.registrationName) {
+    return registrationNames[abstractEvent.type.registrationName]
+  } else {
+    for (const phase in abstractEvent.type.phasedRegistrationNames) {
+      if (!abstractEvent.type.phasedRegistrationNames.hasOwnProperty(phase)) {
+        continue
+      }
+      const PluginModule = registrationNames[abstractEvent.type.phasedRegistrationNames[phase]]
+      if (PluginModule) {
+        return PluginModule
+      }
+    }
+  }
+  return null
 }
 
-const processAbstractEventQueue = () => {}
+const executeDispatchesAndRelease = abstractEvent => {
+  if (abstractEvent) {
+    const PluginModule = getPluginModuleForAbstractEvent(abstractEvent)
+    const pluginExecuteDispatch = PluginModule && PluginModule.executeDispatch
+    EventPluginUtils.executeDispatchesInOrder(
+      abstractEvent,
+      pluginExecuteDispatch || EventPluginUtils.executeDispatch
+    )
+    AbstractEvent.release(abstractEvent)
+  }
+}
+
+const enqueueAbstractEvents = abstractEvents => {
+  if (abstractEvents) {
+    abstractEventQueue = accumulate(abstractEventQueue, abstractEvents)
+  }
+}
+
+const processAbstractEventQueue = () => {
+  const processingAbstractEventQueue = abstractEventQueue
+  abstractEventQueue = null
+  forEachAccumulated(processingAbstractEventQueue, executeDispatchesAndRelease)
+}
 
 export default {
   registrationNames,

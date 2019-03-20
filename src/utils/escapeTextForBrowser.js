@@ -15,6 +15,7 @@ const escapeTextForBrowser = text => {
   if (text === '' || invalid) {
     return ''
   } else {
+    // 对 string 或 object 以外的进行替换
     if (type === 'string') {
       return text.replace(/[&><"'\/]/g, escaper)
     } else {

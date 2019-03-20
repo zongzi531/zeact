@@ -3,8 +3,8 @@ const listenerBank = {}
 const CallbackRegistry = {
   putListener (id, registrationName, listener) {
     // 要写这里了
-    // eslint-disable-next-line no-debugger
-    debugger
+    const bankForRegistrationName = listenerBank[registrationName] || (listenerBank[registrationName] = {})
+    bankForRegistrationName[id] = listener
   },
   getListener (id, registrationName) {
     // 看起来是在 putListener 时，我会将对应的 listener 存入 listenerBank

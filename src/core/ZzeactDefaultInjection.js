@@ -1,7 +1,8 @@
 import EventPluginHub from '@/event/EventPluginHub'
 import DefaultEventPluginOrder from '@/eventPlugins/DefaultEventPluginOrder'
 import ZzeactInstanceHandles from './ZzeactInstanceHandles'
-import SimpleEventPlugin from '../eventPlugins/SimpleEventPlugin'
+import SimpleEventPlugin from '@/eventPlugins/SimpleEventPlugin'
+import EnterLeaveEventPlugin from '@/eventPlugins/EnterLeaveEventPlugin'
 
 export default {
   inject () {
@@ -12,7 +13,7 @@ export default {
 
     EventPluginHub.injection.injectEventPluginsByName({
       'SimpleEventPlugin': SimpleEventPlugin,
-      // 'EnterLeaveEventPlugin': EnterLeaveEventPlugin
+      'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
     })
   },
 }

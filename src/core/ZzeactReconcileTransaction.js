@@ -3,6 +3,7 @@ import Transaction from '@/utils/Transaction'
 import ExecutionEnvironment from '@/environment/ExecutionEnvironment'
 import ZzeactOnDOMReady from '@/core/ZzeactOnDOMReady'
 import ZzeactInputSelection from './ZzeactInputSelection'
+import ZzeactEvent from './ZzeactEvent'
 
 export default class ZzeactReconcileTransaction {
   constructor () {
@@ -20,12 +21,20 @@ const SELECTION_RESTORATION = {
   close: ZzeactInputSelection.restoreSelection,
 }
 
-// Event 这里先不写
-const EVENT_SUPPRESSION = {}
+const EVENT_SUPPRESSION = {
+  initialize () {
+    const currentlyEnabled = ZzeactEvent.isEnabled()
+    ZzeactEvent.setEnabled(false)
+    return currentlyEnabled
+  },
+  close (previouslyEnabled) {
+    ZzeactEvent.setEnabled(previouslyEnabled)
+  },
+}
 
 const ON_DOM_READY_QUEUEING = {
-  initialize: function () { this.zzeactOnDOMReady.reset() },
-  close: function () { this.zzeactOnDOMReady.notifyAll() },
+  initialize () { this.zzeactOnDOMReady.reset() },
+  close () { this.zzeactOnDOMReady.notifyAll() },
 }
 
 const TRANSACTION_WRAPPERS = [

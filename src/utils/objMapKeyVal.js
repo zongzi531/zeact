@@ -1,3 +1,4 @@
+// 这就是一个工厂函数
 const objMapKeyVal = (obj, func) => {
   if (!obj) { return null }
   let i = 0

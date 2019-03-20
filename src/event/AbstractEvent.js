@@ -58,6 +58,20 @@ export default class AbstractEvent {
   }
 
   static isNativeClickEventRightClick (nativeEvent) {
+    // 只读属性 MouseEvent.which 显示了鼠标事件是由哪个鼠标按键被按下所触发的。其他获得该信息的标准属性是 MouseEvent.button 与 MouseEvent.buttons 。
+    // 表示一个特定按键的数字：
+    // 0: 无
+    // 1: 左键
+    // 2: 中间滚轮（如果有的话）
+    // 3: 右键   <==
+    // =======
+    // MouseEvent.button是只读属性，它返回一个值，代表用户按下并触发了事件的鼠标按键。
+    // 一个数值，代表按下的鼠标按键：
+    // 0：主按键被按下，通常指鼠标左键 or the un-initialized state
+    // 1：辅助按键被按下，通常指鼠标滚轮 or the middle button (if present)
+    // 2：次按键被按下，通常指鼠标右键   <==
+    // 3：第四个按钮被按下，通常指浏览器后退按钮
+    // 4：第五个按钮被按下，通常指浏览器的前进按钮
     return nativeEvent.which ? nativeEvent.which === 3
       : nativeEvent.button ? nativeEvent.button === 2
         : false
@@ -110,6 +124,27 @@ export default class AbstractEvent {
       globalY: AbstractEvent.eventPageY(nativeEvent),
       rightMouseButton:
         AbstractEvent.isNativeClickEventRightClick(nativeEvent),
+    }
+  }
+
+  stopPropagation () {
+    this.isPropagationStopped = true
+    if (this.nativeEvent.stopPropagation) {
+      this.nativeEvent.stopPropagation()
+    }
+    // IE8 only understands cancelBubble, not stopPropagation().
+    this.nativeEvent.cancelBubble = true
+  }
+
+  preventDefault () {
+    AbstractEvent.preventDefaultOnNativeEvent(this.nativeEvent)
+  }
+
+  static preventDefaultOnNativeEvent (nativeEvent) {
+    if (nativeEvent.preventDefault) {
+      nativeEvent.preventDefault()
+    } else {
+      nativeEvent.returnValue = false
     }
   }
 }

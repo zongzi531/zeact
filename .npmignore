@@ -2,7 +2,10 @@ examples/
 node_modules/
 scripts/
 src/
+vendor/
 .babelrc
+.eslintignore
+.eslintrc.js
 .gitignore
 main.js
 yarn.lock

@@ -40,8 +40,10 @@ const traverseParentPath = (start, stop, cb, arg, skipFirst, skipLast) => {
   // Traverse from `start` to `stop` one depth at a time.
   let depth = 0
   const traverse = traverseUp ? parentID : ZzeactInstanceHandles.nextDescendantID
+  // 这里的判断就是一级级取父级
   for (let id = start; /* until break */; id = traverse(id, stop)) {
     if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
+      // 判断通过时，执行回调方法
       cb(id, traverseUp, arg)
     }
     if (id === stop) {
@@ -100,7 +102,17 @@ const ZzeactInstanceHandles = {
   },
   traverseTwoPhase (targetID, cb, arg) {
     if (targetID) {
+      // 只有 targetID 存在的情况下才会去执行下面方法， targetID 存在代表是在 Zzeact DOM 上进行操作
+      // 这个很有意思 先执行的是捕获再执行的是冒泡
+      // 获取对应的 Zzeact Dom 的抽象事件逻辑也同样
+      // 比如:
+      // .zzeactRoot[0].[3].0
+      // 捕获阶段： .zzeactRoot[0] => .zzeactRoot[0].[3] => .zzeactRoot[0].[3].0
+      // 冒泡阶段： .zzeactRoot[0].[3].0 => .zzeactRoot[0].[3] => .zzeactRoot[0]
+      // 他里面是通过前后 '.' 来控制判断的
+      // 捕获
       traverseParentPath('', targetID, cb, arg, true, false)
+      // 冒泡
       traverseParentPath(targetID, '', cb, arg, false, true)
     }
   },
@@ -135,6 +147,18 @@ const ZzeactInstanceHandles = {
       }
     }
     return destinationID.substr(0, i)
+  },
+  traverseEnterLeave (leaveID, enterID, cb, upArg, downArg) {
+    const longestCommonID = ZzeactInstanceHandles.getFirstCommonAncestorID(
+      leaveID,
+      enterID
+    )
+    if (longestCommonID !== leaveID) {
+      traverseParentPath(leaveID, longestCommonID, cb, upArg, false, true)
+    }
+    if (longestCommonID !== enterID) {
+      traverseParentPath(longestCommonID, enterID, cb, downArg, true, false)
+    }
   },
 }
 
