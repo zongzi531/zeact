@@ -11,7 +11,7 @@ const { listen, capture } = NormalizedEventListener
 
 const { topLevelTypes } = EventConstants
 
-const { registrationNames, putListener } = EventPluginHub
+const { registrationNames, putListener, deleteAllListeners } = EventPluginHub
 
 let _isListening = false
 
@@ -149,4 +149,5 @@ export default {
   ensureListening,
   trapBubbledEvent,
   trapCapturedEvent,
+  deleteAllListeners,
 }

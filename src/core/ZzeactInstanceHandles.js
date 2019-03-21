@@ -71,6 +71,17 @@ const ZzeactInstanceHandles = {
     }
     return null
   },
+  findComponentRoot (ancestorNode, id) {
+    var child = ancestorNode.firstChild
+    while (child) {
+      if (id === child.id) {
+        return child
+      } else if (id.indexOf(child.id) === 0) {
+        return ZzeactInstanceHandles.findComponentRoot(child, id)
+      }
+      child = child.nextSibling
+    }
+  },
   getFirstCommonAncestorID (oneID, twoID) {
     const minLength = Math.min(oneID.length, twoID.length)
     if (minLength === 0) {

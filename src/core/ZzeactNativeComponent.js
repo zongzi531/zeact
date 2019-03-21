@@ -98,6 +98,11 @@ ZzeactNativeComponent.Mixin = {
     }
     return ''
   },
+  unmountComponent () {
+    ZzeactComponent.Mixin.unmountComponent.call(this)
+    this.unmountMultiChild()
+    ZzeactEvent.deleteAllListeners(this._rootNodeID)
+  },
 }
 
 Object.assign(ZzeactNativeComponent.prototype, ZzeactComponent.Mixin)

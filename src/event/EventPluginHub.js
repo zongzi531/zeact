@@ -22,7 +22,7 @@ const ERRORS = {
     'when some critical dependencies have not yet been injected.',
 }
 
-const { putListener } = CallbackRegistry
+const { putListener, deleteListener } = CallbackRegistry
 
 const registrationNames = {}
 
@@ -150,6 +150,13 @@ const processAbstractEventQueue = () => {
   forEachAccumulated(processingAbstractEventQueue, executeDispatchesAndRelease)
 }
 
+const deleteAllListeners = (domID) => {
+  let ii
+  for (ii = 0; ii < registrationNamesArr.length; ii++) {
+    deleteListener(domID, registrationNamesArr[ii])
+  }
+}
+
 export default {
   registrationNames,
   putListener,
@@ -157,4 +164,5 @@ export default {
   enqueueAbstractEvents,
   processAbstractEventQueue,
   injection,
+  deleteAllListeners,
 }

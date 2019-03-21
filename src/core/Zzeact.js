@@ -9,6 +9,7 @@ ZzeactDefaultInjection.inject()
 export default {
   createClass: ZzeactCompositeComponent.createClass,
   renderComponent: ZzeactMount.renderComponent,
+  unmountAndReleaseZzeactRootNode: ZzeactMount.unmountAndReleaseZzeactRootNode,
   DOM: ZzeactDOM,
   autoBind: ZzeactCompositeComponent.autoBind,
 }

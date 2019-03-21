@@ -25,14 +25,24 @@ const ZzeactMount = {
   totalInstantiationTime: 0,
   totalInjectionTime: 0,
   useTouchEvents: false,
+  scrollMonitor (container, renderCallback) {
+    renderCallback()
+  },
   prepareTopLevelEvents (TopLevelCallbackCreator) {
     ZzeactEvent.ensureListening(ZzeactMount.useTouchEvents, TopLevelCallbackCreator)
   },
   renderComponent (nextComponent, container) {
     const prevComponent = instanceByZzeactRootID[getZzeactRootID(container)]
     if (prevComponent) {
-      // 这里的逻辑暂时不写
-      console.log(prevComponent)
+      if (prevComponent.constructor === nextComponent.constructor) {
+        const nextProps = nextComponent.props
+        ZzeactMount.scrollMonitor(container, () => {
+          prevComponent.replaceProps(nextProps)
+        })
+        return prevComponent
+      } else {
+        ZzeactMount.unmountAndReleaseZzeactRootNode(container)
+      }
     }
 
     // 注册事件
@@ -55,6 +65,22 @@ const ZzeactMount = {
     }
     containersByZzeactRootID[zzeactRootID] = container
     return zzeactRootID
+  },
+  unmountAndReleaseZzeactRootNode (container) {
+    const zzeactRootID = getZzeactRootID(container)
+    const component = instanceByZzeactRootID[zzeactRootID]
+    component.unmountComponentFromNode(container)
+    delete instanceByZzeactRootID[zzeactRootID]
+    delete containersByZzeactRootID[zzeactRootID]
+  },
+  findZzeactContainerForID (id) {
+    const zzeatRootID = ZzeactInstanceHandles.getZzeactRootIDFromNodeID(id)
+    // TODO: Consider throwing if `id` is not a valid React element ID.
+    return containersByZzeactRootID[zzeatRootID]
+  },
+  findZzeactRenderedDOMNodeSlow (id) {
+    const zzeactRoot = ZzeactMount.findZzeactContainerForID(id)
+    return ZzeactInstanceHandles.findComponentRoot(zzeactRoot, id)
   },
 }
 

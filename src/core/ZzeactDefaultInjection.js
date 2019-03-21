@@ -3,6 +3,8 @@ import DefaultEventPluginOrder from '@/eventPlugins/DefaultEventPluginOrder'
 import ZzeactInstanceHandles from './ZzeactInstanceHandles'
 import SimpleEventPlugin from '@/eventPlugins/SimpleEventPlugin'
 import EnterLeaveEventPlugin from '@/eventPlugins/EnterLeaveEventPlugin'
+import ZzeactDOMForm from './ZzeactDOMForm'
+import ZzeactDOM from './ZzeactDOM'
 
 export default {
   inject () {
@@ -14,6 +16,10 @@ export default {
     EventPluginHub.injection.injectEventPluginsByName({
       'SimpleEventPlugin': SimpleEventPlugin,
       'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
+    })
+
+    ZzeactDOM.injection.injectComponentClasses({
+      form: ZzeactDOMForm,
     })
   },
 }

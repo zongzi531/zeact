@@ -1,5 +1,6 @@
 import ZzeactNativeComponent from './ZzeactNativeComponent'
 import objMapKeyVal from '@/utils/objMapKeyVal'
+import mergeInto from '@/utils/mergeInto'
 
 const createDOMComponentClass = (tag, omitClose) => {
   class Constructor {
@@ -112,5 +113,13 @@ const ZzeactDOM = objMapKeyVal({
   svg: false,
   text: false,
 }, createDOMComponentClass)
+
+const injection = {
+  injectComponentClasses: function (componentClasses) {
+    mergeInto(ZzeactDOM, componentClasses)
+  },
+}
+
+ZzeactDOM.injection = injection
 
 export default ZzeactDOM

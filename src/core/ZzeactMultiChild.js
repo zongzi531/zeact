@@ -18,6 +18,16 @@ const ZzeactMultiChildMixin = {
     this.domOperations = null
     return accum
   },
+  unmountMultiChild () {
+    const renderedChildren = this._renderedChildren
+    for (const name in renderedChildren) {
+      if (renderedChildren.hasOwnProperty(name) && renderedChildren[name]) {
+        const renderedChild = renderedChildren[name]
+        renderedChild.unmountComponent && renderedChild.unmountComponent()
+      }
+    }
+    this._renderedChildren = null
+  },
 }
 
 const ZzeactMultiChild = {

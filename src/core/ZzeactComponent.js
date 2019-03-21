@@ -1,14 +1,44 @@
 import ZzeactCurrentOwner from './ZzeactCurrentOwner'
 import ZzeactReconcileTransaction from './ZzeactReconcileTransaction'
 import ZzeactMount from './ZzeactMount'
+import keyMirror from '@/utils/keyMirror'
+import invariant from '@/vendor/core/invariant'
+import ExecutionEnvironment from '@/environment/ExecutionEnvironment'
+import ZzeactOwner from './ZzeactOwner'
 
 const OWNER = '{owner}'
 
+const ComponentLifeCycle = keyMirror({
+  MOUNTED: null,
+  UNMOUNTED: null,
+})
+
 const ZzeactComponent = {
+  LifeCycle: ComponentLifeCycle,
   ZzeactReconcileTransaction,
   // 这个方法暴露出来像是可以自己修改这个 ZzeactReconcileTransaction，但是这个方法并没有暴露给外界
   setZzeactReconcileTransaction: ZzeactReconcileTransaction => { ZzeactComponent.ZzeactReconcileTransaction = ZzeactReconcileTransaction },
   Mixin: {
+    getDOMNode () {
+      invariant(
+        ExecutionEnvironment.canUseDOM,
+        'getDOMNode(): The DOM is not supported in the current environment.'
+      )
+      invariant(
+        this._lifeCycleState === ComponentLifeCycle.MOUNTED,
+        'getDOMNode(): A component must be mounted to have a DOM node.'
+      )
+      var rootNode = this._rootNode
+      if (!rootNode) {
+        rootNode = document.getElementById(this._rootNodeID)
+        if (!rootNode) {
+          // TODO: Log the frequency that we reach this path.
+          rootNode = ZzeactMount.findZzeactRenderedDOMNodeSlow(this._rootNodeID)
+        }
+        this._rootNode = rootNode
+      }
+      return rootNode
+    },
     construct (initialProps, children) {
       // 这里没有使用函数默认参数时因为`initialProps`可能为`null`
       this.props = initialProps || {}
@@ -19,9 +49,22 @@ const ZzeactComponent = {
       this.props[OWNER] = ZzeactCurrentOwner.current
       // **查看源码发现这里并没有写完，这个是由ReactCompositeComponentMixin下调起**
       // 会初始化state及生命周期
+      this._lifeCycleState = ComponentLifeCycle.UNMOUNTED
     },
     mountComponent (rootID, transaction) {
+      invariant(
+        this._lifeCycleState === ComponentLifeCycle.UNMOUNTED,
+        'mountComponent(%s, ...): Can only mount an unmounted component.',
+        rootID
+      )
+
+      const props = this.props
+      if (props.ref != null) {
+        ZzeactOwner.addComponentAsRefTo(this, props.ref, props[OWNER])
+      }
+
       this._rootNodeID = rootID
+      this._lifeCycleState = ComponentLifeCycle.MOUNTED
     },
     mountComponentIntoNode (rootID, container) {
       // 调用 getPooled 方法，在 addPoolingTo 时未传入第二参数时，默认使用 oneArgumentPooler 方法
@@ -61,6 +104,30 @@ const ZzeactComponent = {
         container.innerHTML = markup
       }
       ZzeactMount.totalInjectionTime += (Date.now() - injectionStart)
+    },
+    unmountComponent () {
+      invariant(
+        this._lifeCycleState === ComponentLifeCycle.MOUNTED,
+        'unmountComponent(): Can only unmount a mounted component.'
+      )
+
+      const props = this.props
+      if (props.ref != null) {
+        ZzeactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER])
+      }
+
+      this._rootNode = null
+      this._rootNodeID = null
+      this._lifeCycleState = ComponentLifeCycle.UNMOUNTED
+    },
+    unmountComponentFromNode (container) {
+      this.unmountComponent()
+      while (container.lastChild) {
+        container.removeChild(container.lastChild)
+      }
+    },
+    isOwnedBy (owner) {
+      return this.props[OWNER] === owner
     },
   },
 }

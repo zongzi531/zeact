@@ -13,6 +13,12 @@ const CallbackRegistry = {
     const bankForRegistrationName = listenerBank[registrationName]
     return bankForRegistrationName && bankForRegistrationName[id]
   },
+  deleteListener (id, registrationName) {
+    const bankForRegistrationName = listenerBank[registrationName]
+    if (bankForRegistrationName) {
+      delete bankForRegistrationName[id]
+    }
+  },
 }
 
 export default CallbackRegistry
