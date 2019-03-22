@@ -220,6 +220,114 @@ const ZzeactCompositeComponentMixin = {
     // setState 方法内部，相关方法还没写
     this.replaceState(merge(this._pendingState || this.state, partialState))
   },
+  replaceState (completeState) {
+    const compositeLifeCycleState = this._compositeLifeCycleState
+    invariant(
+      this._lifeCycleState === ZzeactComponent.LifeCycle.MOUNTED ||
+      compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
+      'replaceState(...): Can only update a mounted (or mounting) component.'
+    )
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'replaceState(...): Cannot update while unmounting component or during ' +
+      'an existing state transition (such as within `render`).'
+    )
+
+    this._pendingState = completeState
+
+    // Do not trigger a state transition if we are in the middle of mounting or
+    // receiving props because both of those will already be doing this.
+    if (compositeLifeCycleState !== CompositeLifeCycle.MOUNTING &&
+      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_PROPS) {
+      this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE
+
+      const nextState = this._pendingState
+      this._pendingState = null
+
+      const transaction = ZzeactComponent.ZzeactReconcileTransaction.getPooled()
+      transaction.perform(
+        this._receivePropsAndState,
+        this,
+        this.props,
+        nextState,
+        transaction
+      )
+      ZzeactComponent.ZzeactReconcileTransaction.release(transaction)
+
+      this._compositeLifeCycleState = null
+    }
+  },
+  _receivePropsAndState (nextProps, nextState, transaction) {
+    if (!this.shouldComponentUpdate ||
+      this.shouldComponentUpdate(nextProps, nextState)) {
+      // Will set `this.props` and `this.state`.
+      this._performComponentUpdate(nextProps, nextState, transaction)
+    } else {
+      // If it's determined that a component should not update, we still want
+      // to set props and state.
+      this.props = nextProps
+      this.state = nextState
+    }
+  },
+  _performComponentUpdate (nextProps, nextState, transaction) {
+    const prevProps = this.props
+    const prevState = this.state
+
+    if (this.componentWillUpdate) {
+      this.componentWillUpdate(nextProps, nextState, transaction)
+    }
+
+    this.props = nextProps
+    this.state = nextState
+
+    this.updateComponent(transaction)
+
+    if (this.componentDidUpdate) {
+      transaction.getZzeactOnDOMReady().enqueue(
+        this,
+        this.componentDidUpdate.bind(this, prevProps, prevState)
+      )
+    }
+  },
+  updateComponent (transaction) {
+    const currentComponent = this._renderedComponent
+    const nextComponent = this._renderValidatedComponent()
+    if (currentComponent.constructor === nextComponent.constructor) {
+      if (!nextComponent.props.isStatic) {
+        currentComponent.receiveProps(nextComponent.props, transaction)
+      }
+    } else {
+      // These two IDs are actually the same! But nothing should rely on that.
+      const thisID = this._rootNodeID
+      const currentComponentID = currentComponent._rootNodeID
+      currentComponent.unmountComponent()
+      const nextMarkup = nextComponent.mountComponent(thisID, transaction)
+      ZzeactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+        currentComponentID,
+        nextMarkup
+      )
+      this._renderedComponent = nextComponent
+    }
+  },
+  receiveProps (nextProps, transaction) {
+    if (this.constructor.propDeclarations) {
+      this._assertValidProps(nextProps)
+    }
+    ZzeactComponent.Mixin.receiveProps.call(this, nextProps, transaction)
+
+    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS
+    if (this.componentWillReceiveProps) {
+      this.componentWillReceiveProps(nextProps, transaction)
+    }
+    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE
+    // When receiving props, calls to `setState` by `componentWillReceiveProps`
+    // will set `this._pendingState` without triggering a re-render.
+    var nextState = this._pendingState || this.state
+    this._pendingState = null
+    this._receivePropsAndState(nextProps, nextState, transaction)
+    this._compositeLifeCycleState = null
+  },
 }
 
 class ZzeactCompositeComponentBase {}

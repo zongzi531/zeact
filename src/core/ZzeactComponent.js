@@ -5,6 +5,7 @@ import keyMirror from '@/utils/keyMirror'
 import invariant from '@/vendor/core/invariant'
 import ExecutionEnvironment from '@/environment/ExecutionEnvironment'
 import ZzeactOwner from './ZzeactOwner'
+import ZzeactDOMIDOperations from './ZzeactDOMIDOperations'
 
 const OWNER = '{owner}'
 
@@ -14,7 +15,15 @@ const ComponentLifeCycle = keyMirror({
 })
 
 const ZzeactComponent = {
+  isValidComponent (object) {
+    return !!(
+      object &&
+      typeof object.mountComponentIntoNode === 'function' &&
+      typeof object.receiveProps === 'function'
+    )
+  },
   LifeCycle: ComponentLifeCycle,
+  DOMIDOperations: ZzeactDOMIDOperations,
   ZzeactReconcileTransaction,
   // 这个方法暴露出来像是可以自己修改这个 ZzeactReconcileTransaction，但是这个方法并没有暴露给外界
   setZzeactReconcileTransaction: ZzeactReconcileTransaction => { ZzeactComponent.ZzeactReconcileTransaction = ZzeactReconcileTransaction },
@@ -124,6 +133,25 @@ const ZzeactComponent = {
       this.unmountComponent()
       while (container.lastChild) {
         container.removeChild(container.lastChild)
+      }
+    },
+    receiveProps (nextProps, transaction) {
+      invariant(
+        this._lifeCycleState === ComponentLifeCycle.MOUNTED,
+        'receiveProps(...): Can only update a mounted component.'
+      )
+      const props = this.props
+      // If either the owner or a `ref` has changed, make sure the newest owner
+      // has stored a reference to `this`, and the previous owner (if different)
+      // has forgotten the reference to `this`.
+      if (nextProps[OWNER] !== props[OWNER] || nextProps.ref !== props.ref) {
+        if (props.ref != null) {
+          ZzeactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER])
+        }
+        // Correct, even if the owner is the same, and only the ref has changed.
+        if (nextProps.ref != null) {
+          ZzeactOwner.addComponentAsRefTo(this, nextProps.ref, nextProps[OWNER])
+        }
       }
     },
     isOwnedBy (owner) {

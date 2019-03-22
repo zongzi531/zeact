@@ -20,6 +20,16 @@ const CSSPropertyOperations = {
     }
     return serialized
   },
+  setValueForStyles (node, styles) {
+    const style = node.style
+    for (const styleName in styles) {
+      if (!styles.hasOwnProperty(styleName)) {
+        continue
+      }
+      const styleValue = styles[styleName]
+      style[styleName] = dangerousStyleValue(styleName, styleValue)
+    }
+  },
 }
 
 export default CSSPropertyOperations

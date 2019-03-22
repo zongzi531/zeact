@@ -7,12 +7,34 @@ import escapeTextForBrowser from '@/utils/escapeTextForBrowser'
 import flattenChildren from '@/utils/flattenChildren'
 import ZzeactMultiChild from './ZzeactMultiChild'
 import ZzeactEvent from './ZzeactEvent'
+import invariant from '@/vendor/core/invariant'
 
 const { registrationNames, putListener } = ZzeactEvent
 
 const CONTENT_TYPES = { 'string': true, 'number': true }
-
+const CONTENT = keyOf({ content: null })
+const DANGEROUSLY_SET_INNER_HTML = keyOf({ dangerouslySetInnerHTML: null })
 const STYLE = keyOf({ style: null })
+
+const assertValidProps = props => {
+  if (!props) {
+    return
+  }
+  // Note the use of `!=` which checks for null or undefined.
+  const hasChildren = props.children != null ? 1 : 0
+  const hasContent = props.content != null ? 1 : 0
+  const hasInnerHTML = props.dangerouslySetInnerHTML != null ? 1 : 0
+  invariant(
+    hasChildren + hasContent + hasInnerHTML <= 1,
+    'Can only set one of `children`, `props.content`, or ' +
+    '`props.dangerouslySetInnerHTML`.'
+  )
+  invariant(
+    props.style == null || typeof props.style === 'object',
+    'The `style` prop expects a mapping from style properties to values, ' +
+    'not a string.'
+  )
+}
 
 export default class ZzeactNativeComponent {
   constructor (tag, omitClose) {
@@ -102,6 +124,114 @@ ZzeactNativeComponent.Mixin = {
     ZzeactComponent.Mixin.unmountComponent.call(this)
     this.unmountMultiChild()
     ZzeactEvent.deleteAllListeners(this._rootNodeID)
+  },
+  receiveProps (nextProps, transaction) {
+    invariant(
+      this._rootNodeID,
+      'Trying to control a native dom element without a backing id'
+    )
+    assertValidProps(nextProps)
+    ZzeactComponent.Mixin.receiveProps.call(this, nextProps, transaction)
+    this._updateDOMProperties(nextProps)
+    this._updateDOMChildren(nextProps, transaction)
+    this.props = nextProps
+  },
+  _updateDOMProperties (nextProps) {
+    const lastProps = this.props
+    for (const propKey in nextProps) {
+      let nextProp = nextProps[propKey]
+      const lastProp = lastProps[propKey]
+      if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
+        continue
+      }
+      if (propKey === STYLE) {
+        if (nextProp) {
+          nextProp = nextProps.style = merge(nextProp)
+        }
+        let styleUpdates
+        for (const styleName in nextProp) {
+          if (!nextProp.hasOwnProperty(styleName)) {
+            continue
+          }
+          if (!lastProp || lastProp[styleName] !== nextProp[styleName]) {
+            if (!styleUpdates) {
+              styleUpdates = {}
+            }
+            styleUpdates[styleName] = nextProp[styleName]
+          }
+        }
+        if (styleUpdates) {
+          ZzeactComponent.DOMIDOperations.updateStylesByID(
+            this._rootNodeID,
+            styleUpdates
+          )
+        }
+      } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+        const lastHtml = lastProp && lastProp.__html
+        const nextHtml = nextProp && nextProp.__html
+        if (lastHtml !== nextHtml) {
+          ZzeactComponent.DOMIDOperations.updateInnerHTMLByID(
+            this._rootNodeID,
+            nextProp
+          )
+        }
+      } else if (propKey === CONTENT) {
+        ZzeactComponent.DOMIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          '' + nextProp
+        )
+      } else if (registrationNames[propKey]) {
+        putListener(this._rootNodeID, propKey, nextProp)
+      } else {
+        ZzeactComponent.DOMIDOperations.updatePropertyByID(
+          this._rootNodeID,
+          propKey,
+          nextProp
+        )
+      }
+    }
+  },
+  _updateDOMChildren (nextProps, transaction) {
+    const thisPropsContentType = typeof this.props.content
+    const thisPropsContentEmpty =
+      this.props.content == null || thisPropsContentType === 'boolean'
+    const nextPropsContentType = typeof nextProps.content
+    const nextPropsContentEmpty =
+      nextProps.content == null || nextPropsContentType === 'boolean'
+
+    const lastUsedContent = !thisPropsContentEmpty ? this.props.content
+      : CONTENT_TYPES[typeof this.props.children] ? this.props.children : null
+
+    const contentToUse = !nextPropsContentEmpty ? nextProps.content
+      : CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null
+
+    // Note the use of `!=` which checks for null or undefined.
+
+    const lastUsedChildren =
+      lastUsedContent != null ? null : this.props.children
+    const childrenToUse = contentToUse != null ? null : nextProps.children
+
+    if (contentToUse != null) {
+      const childrenRemoved = lastUsedChildren != null && childrenToUse == null
+      if (childrenRemoved) {
+        this.updateMultiChild(null, transaction)
+      }
+      if (lastUsedContent !== contentToUse) {
+        ZzeactComponent.DOMIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          '' + contentToUse
+        )
+      }
+    } else {
+      const contentRemoved = lastUsedContent != null && contentToUse == null
+      if (contentRemoved) {
+        ZzeactComponent.DOMIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          ''
+        )
+      }
+      this.updateMultiChild(flattenChildren(nextProps.children), transaction)
+    }
   },
 }
 
