@@ -12,6 +12,14 @@ const injection = {
   injectInstanceHandle (InjectedInstanceHandle) {
     injection.InstanceHandle = InjectedInstanceHandle
   },
+  validate () {
+    var invalid = !injection.InstanceHandle ||
+      !injection.InstanceHandle.traverseTwoPhase ||
+      !injection.InstanceHandle.traverseEnterLeave
+    if (invalid) {
+      throw new Error('InstanceHandle not injected before use!')
+    }
+  },
 }
 
 const listenerAtPhase = (id, abstractEvent, propagationPhase) => {
@@ -68,6 +76,12 @@ const accumulateDispatches = (id, ignoredDirection, abstractEvent) => {
   }
 }
 
+const accumulateDirectDispatchesSingle = abstractEvent => {
+  if (abstractEvent && abstractEvent.type.registrationName) {
+    accumulateDispatches(abstractEvent.abstractTargetID, null, abstractEvent)
+  }
+}
+
 const accumulateEnterLeaveDispatches = (leave, enter, fromID, toID) => {
   injection.InstanceHandle.traverseEnterLeave(
     fromID,
@@ -78,8 +92,13 @@ const accumulateEnterLeaveDispatches = (leave, enter, fromID, toID) => {
   )
 }
 
+const accumulateDirectDispatches = abstractEvents => {
+  forEachAccumulated(abstractEvents, accumulateDirectDispatchesSingle)
+}
+
 export default {
   injection,
   accumulateTwoPhaseDispatches,
   accumulateEnterLeaveDispatches,
+  accumulateDirectDispatches,
 }

@@ -11,5 +11,6 @@ module.exports = {
         'no-useless-escape': 0,
         'no-useless-return': 0,
         'no-new-func': 0,
+        'eqeqeq': 0,
     }
 }

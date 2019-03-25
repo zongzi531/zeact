@@ -6,6 +6,7 @@ import merge from '@/utils/merge'
 import forEachAccumulated from '@/utils/forEachAccumulated'
 import EventPluginUtils from './EventPluginUtils'
 import AbstractEvent from './AbstractEvent'
+import ExecutionEnvironment from '@/environment/ExecutionEnvironment'
 
 const ERRORS = {
   DOUBLE_REGISTER:
@@ -22,7 +23,7 @@ const ERRORS = {
     'when some critical dependencies have not yet been injected.',
 }
 
-const { putListener, deleteListener } = CallbackRegistry
+const { putListener, deleteListener, getListener } = CallbackRegistry
 
 const registrationNames = {}
 
@@ -157,12 +158,20 @@ const deleteAllListeners = (domID) => {
   }
 }
 
-export default {
+const EventPluginHub = {
   registrationNames,
+  registrationNamesArr,
   putListener,
+  getListener,
   extractAbstractEvents,
   enqueueAbstractEvents,
   processAbstractEventQueue,
   injection,
   deleteAllListeners,
 }
+
+if (ExecutionEnvironment.canUseDOM) {
+  window.EventPluginHub = EventPluginHub
+}
+
+export default EventPluginHub

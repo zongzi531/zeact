@@ -5,6 +5,7 @@ import ZzeactOnDOMReady from '@/core/ZzeactOnDOMReady'
 import ZzeactInputSelection from './ZzeactInputSelection'
 import ZzeactEvent from './ZzeactEvent'
 
+// 整个类就是不难看出，就是为了 PooledClass 所准备的
 export default class ZzeactReconcileTransaction {
   constructor () {
     // 初始化时，调用 Transaction 的 reinitializeTransaction 方法
@@ -56,6 +57,7 @@ const Mixin = {
   getZzeactOnDOMReady () {
     return this.zzeactOnDOMReady
   },
+  // PooledClass 使用的方法
   destructor () {
     // 在 ZzeactReconcileTransaction 被 new 时，操作了
     // this.zzeactOnDOMReady = ZzeactOnDOMReady.getPooled(null)

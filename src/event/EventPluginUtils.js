@@ -1,3 +1,35 @@
+import EventConstants from './EventConstants'
+import AbstractEvent from './AbstractEvent'
+import invariant from '@/vendor/core/invariant'
+
+const { topLevelTypes } = EventConstants
+
+const isEndish = topLevelType => topLevelType === topLevelTypes.topMouseUp ||
+    topLevelType === topLevelTypes.topTouchEnd ||
+    topLevelType === topLevelTypes.topTouchCancel
+
+const isMoveish = topLevelType => topLevelType === topLevelTypes.topMouseMove ||
+    topLevelType === topLevelTypes.topTouchMove
+
+const isStartish = topLevelType => topLevelType === topLevelTypes.topMouseDown ||
+    topLevelType === topLevelTypes.topTouchStart
+
+const storePageCoordsIn = (obj, nativeEvent) => {
+  const pageX = AbstractEvent.eventPageX(nativeEvent)
+  const pageY = AbstractEvent.eventPageY(nativeEvent)
+  obj.pageX = pageX
+  obj.pageY = pageY
+}
+
+const eventDistance = (coords, nativeEvent) => {
+  const pageX = AbstractEvent.eventPageX(nativeEvent)
+  const pageY = AbstractEvent.eventPageY(nativeEvent)
+  return Math.pow(
+    Math.pow(pageX - coords.pageX, 2) + Math.pow(pageY - coords.pageY, 2),
+    0.5
+  )
+}
+
 const forEachEventDispatch = (abstractEvent, cb) => {
   const dispatchListeners = abstractEvent._dispatchListeners
   const dispatchIDs = abstractEvent._dispatchIDs
@@ -14,7 +46,51 @@ const forEachEventDispatch = (abstractEvent, cb) => {
   }
 }
 
+const executeDispatchesInOrderStopAtTrue = abstractEvent => {
+  var dispatchListeners = abstractEvent._dispatchListeners
+  var dispatchIDs = abstractEvent._dispatchIDs
+  if (Array.isArray(dispatchListeners)) {
+    var i
+    for (
+      i = 0;
+      i < dispatchListeners.length && !abstractEvent.isPropagationStopped;
+      i++) {
+      // Listeners and IDs are two parallel arrays that are always in sync.
+      if (dispatchListeners[i](abstractEvent, dispatchIDs[i])) {
+        return dispatchIDs[i]
+      }
+    }
+  } else if (dispatchListeners) {
+    if (dispatchListeners(abstractEvent, dispatchIDs)) {
+      return dispatchIDs
+    }
+  }
+  return null
+}
+
+const executeDirectDispatch = abstractEvent => {
+  var dispatchListener = abstractEvent._dispatchListeners
+  var dispatchID = abstractEvent._dispatchIDs
+  invariant(
+    !Array.isArray(dispatchListener),
+    'executeDirectDispatch(...): Invalid `abstractEvent`.'
+  )
+  var res = dispatchListener
+    ? dispatchListener(abstractEvent, dispatchID)
+    : null
+  abstractEvent._dispatchListeners = null
+  abstractEvent._dispatchIDs = null
+  return res
+}
+
+const hasDispatches = abstractEvent => !!abstractEvent._dispatchListeners
+
 export default {
+  isEndish,
+  isMoveish,
+  isStartish,
+  storePageCoordsIn,
+  eventDistance,
   // 这个方法在干嘛?
   executeDispatch (abstractEvent, listener, domID) {
     listener(abstractEvent, domID)
@@ -26,4 +102,7 @@ export default {
     abstractEvent._dispatchListeners = null
     abstractEvent._dispatchIDs = null
   },
+  executeDispatchesInOrderStopAtTrue,
+  executeDirectDispatch,
+  hasDispatches,
 }

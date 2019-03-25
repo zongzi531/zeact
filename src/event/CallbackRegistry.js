@@ -1,4 +1,4 @@
-const listenerBank = {}
+let listenerBank = {}
 
 const CallbackRegistry = {
   putListener (id, registrationName, listener) {
@@ -18,6 +18,9 @@ const CallbackRegistry = {
     if (bankForRegistrationName) {
       delete bankForRegistrationName[id]
     }
+  },
+  __purge () {
+    listenerBank = {}
   },
 }
 

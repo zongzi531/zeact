@@ -6,15 +6,22 @@ import invariant from '@/vendor/core/invariant'
 import ExecutionEnvironment from '@/environment/ExecutionEnvironment'
 import ZzeactOwner from './ZzeactOwner'
 import ZzeactDOMIDOperations from './ZzeactDOMIDOperations'
+import merge from '@/utils/merge'
 
 const OWNER = '{owner}'
 
+// 组件的生命周期相关
+// 已挂载 MOUNTED
+// 未挂载 UNMOUNTED
 const ComponentLifeCycle = keyMirror({
   MOUNTED: null,
   UNMOUNTED: null,
 })
 
 const ZzeactComponent = {
+  // 校验是否为 Zzeact 组件的方法
+  // 判断对象，并且 mountComponentIntoNode 和 receiveProps 为方法的情况来断定是 Zzeact 组件
+  // 这就是著名的鸭子类型
   isValidComponent (object) {
     return !!(
       object &&
@@ -23,8 +30,12 @@ const ZzeactComponent = {
     )
   },
   LifeCycle: ComponentLifeCycle,
+  // 一些 DOM 操作相关的工具方法
   DOMIDOperations: ZzeactDOMIDOperations,
+  // 这里还需要具体分析下
   ZzeactReconcileTransaction,
+  // 这个方法是用来修改 DOMIDOperations 的
+  setDOMOperations: DOMIDOperations => { ZzeactComponent.DOMIDOperations = DOMIDOperations },
   // 这个方法暴露出来像是可以自己修改这个 ZzeactReconcileTransaction，但是这个方法并没有暴露给外界
   setZzeactReconcileTransaction: ZzeactReconcileTransaction => { ZzeactComponent.ZzeactReconcileTransaction = ZzeactReconcileTransaction },
   Mixin: {
@@ -37,7 +48,7 @@ const ZzeactComponent = {
         this._lifeCycleState === ComponentLifeCycle.MOUNTED,
         'getDOMNode(): A component must be mounted to have a DOM node.'
       )
-      var rootNode = this._rootNode
+      let rootNode = this._rootNode
       if (!rootNode) {
         rootNode = document.getElementById(this._rootNodeID)
         if (!rootNode) {
@@ -47,6 +58,22 @@ const ZzeactComponent = {
         this._rootNode = rootNode
       }
       return rootNode
+    },
+    setProps (partialProps) {
+      this.replaceProps(merge(this.props, partialProps))
+    },
+    replaceProps (props) {
+      invariant(
+        !this.props[OWNER],
+        'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
+        'component with an owner. This is an anti-pattern since props will ' +
+        'get reactively updated when rendered. Instead, change the owner\'s ' +
+        '`render` method to pass the correct value as props to the component ' +
+        'where it is created.'
+      )
+      const transaction = ZzeactComponent.ZzeactReconcileTransaction.getPooled()
+      transaction.perform(this.receiveProps, this, props, transaction)
+      ZzeactComponent.ZzeactReconcileTransaction.release(transaction)
     },
     construct (initialProps, children) {
       // 这里没有使用函数默认参数时因为`initialProps`可能为`null`

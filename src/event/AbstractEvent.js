@@ -127,6 +127,15 @@ export default class AbstractEvent {
     }
   }
 
+  static normalizeDragEventData (nativeEvent, globalX, globalY, startX, startY) {
+    return {
+      globalX: globalX,
+      globalY: globalY,
+      startX: startX,
+      startY: startY,
+    }
+  }
+
   stopPropagation () {
     this.isPropagationStopped = true
     if (this.nativeEvent.stopPropagation) {
@@ -146,6 +155,17 @@ export default class AbstractEvent {
     } else {
       nativeEvent.returnValue = false
     }
+  }
+
+  static persistentCloneOf (abstractEvent) {
+    return new AbstractEvent(
+      abstractEvent.type,
+      abstractEvent.abstractTargetID,
+      abstractEvent.originatingTopLevelEventType,
+      abstractEvent.nativeEvent,
+      abstractEvent.data,
+      abstractEvent.target
+    )
   }
 }
 

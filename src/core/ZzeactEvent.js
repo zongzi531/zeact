@@ -1,7 +1,6 @@
 import EventPluginHub from '@/event/EventPluginHub'
 import ExecutionEnvironment from '@/environment/ExecutionEnvironment'
 import invariant from '@/vendor/core/invariant'
-import ZzeactEvent from './ZzeactEvent'
 import EventConstants from '@/event/EventConstants'
 import NormalizedEventListener from '@/event/NormalizedEventListener'
 import isEventSupported from '@/domUtils/isEventSupported'
@@ -11,7 +10,7 @@ const { listen, capture } = NormalizedEventListener
 
 const { topLevelTypes } = EventConstants
 
-const { registrationNames, putListener, deleteAllListeners } = EventPluginHub
+const { registrationNames, putListener, deleteAllListeners, getListener } = EventPluginHub
 
 let _isListening = false
 
@@ -122,6 +121,19 @@ const handleTopLevel = (topLevelType, nativeEvent, renderedTargetID, renderedTar
   EventPluginHub.processAbstractEventQueue()
 }
 
+const setEnabled = enabled => {
+  invariant(
+    ExecutionEnvironment.canUseDOM,
+    'setEnabled(...): Cannot toggle event listening in a Worker thread. This ' +
+    'is likely a bug in the framework. Please report immediately.'
+  )
+  ZzeactEvent.TopLevelCallbackCreator.setEnabled(enabled)
+}
+
+const isEnabled = () => {
+  return ZzeactEvent.TopLevelCallbackCreator.isEnabled()
+}
+
 const ensureListening = (touchNotMouse, TopLevelCallbackCreator) => {
   invariant(
     ExecutionEnvironment.canUseDOM,
@@ -137,17 +149,18 @@ const ensureListening = (touchNotMouse, TopLevelCallbackCreator) => {
   }
 }
 
-// 这里把 EventPluginHub 挂在 window 不知用意是什么
-if (ExecutionEnvironment.canUseDOM) {
-  window.EventPluginHub = EventPluginHub
-}
-
-export default {
+const ZzeactEvent = {
+  TopLevelCallbackCreator: null,
   registrationNames,
   putListener,
+  getListener,
   handleTopLevel,
   ensureListening,
   trapBubbledEvent,
   trapCapturedEvent,
   deleteAllListeners,
+  setEnabled,
+  isEnabled,
 }
+
+export default ZzeactEvent

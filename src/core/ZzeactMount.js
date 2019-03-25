@@ -1,6 +1,7 @@
 import ZzeactInstanceHandles from './ZzeactInstanceHandles'
 import ZzeactEvent from './ZzeactEvent'
 import ZzeactEventTopLevelCallback from './ZzeactEventTopLevelCallback'
+import $ from '@/vendor/core/$'
 
 /**
  * 总共的挂在数量
@@ -21,6 +22,21 @@ const getZzeactRootID = (container) => {
   return container.firstChild && container.firstChild.id
 }
 
+/**
+ * Mounting is the process of initializing a React component by creatings its
+ * representative DOM elements and inserting them into a supplied `container`.
+ * Any prior content inside `container` is destroyed in the process.
+ *
+ *   ReactMount.renderComponent(component, $('container'));
+ *
+ *   <div id="container">         <-- Supplied `container`.
+ *     <div id=".reactRoot[3]">   <-- Rendered reactRoot of React component.
+ *       // ...
+ *     </div>
+ *   </div>
+ *
+ * Inside of `container`, the first element rendered is the "reactRoot".
+ */
 const ZzeactMount = {
   totalInstantiationTime: 0,
   totalInjectionTime: 0,
@@ -52,6 +68,17 @@ const ZzeactMount = {
     instanceByZzeactRootID[zzeactRootID] = nextComponent
     nextComponent.mountComponentIntoNode(zzeactRootID, container)
     return nextComponent
+  },
+  createComponentRenderer (component) {
+    return function (container) {
+      return ZzeactMount.renderComponent(component, container)
+    }
+  },
+  constructAndRenderComponent (constructor, props, container) {
+    return ZzeactMount.renderComponent(constructor(props), container)
+  },
+  constructAndRenderComponentByID (constructor, props, id) {
+    return ZzeactMount.constructAndRenderComponent(constructor, props, $(id))
   },
   registerContainer (container) {
     let zzeactRootID = getZzeactRootID(container)

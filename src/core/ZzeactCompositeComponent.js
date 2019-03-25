@@ -136,6 +136,10 @@ const ZzeactCompositeComponentMixin = {
     this._lifeCycleState = ZzeactComponent.LifeCycle.UNMOUNTED
     this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING
 
+    if (this.constructor.propDeclarations) {
+      this._assertValidProps(this.props)
+    }
+
     if (this.__zzeactAutoBindMap) {
       this._bindAutoBindMethods()
     }
@@ -188,6 +192,11 @@ const ZzeactCompositeComponentMixin = {
     ZzeactCurrentOwner.current = this
     const renderedComponent = this.render()
     ZzeactCurrentOwner.current = null
+    invariant(
+      ZzeactComponent.isValidComponent(renderedComponent),
+      '%s.render(): A valid ReactComponent must be returned.',
+      this.constructor.displayName || 'ReactCompositeComponent'
+    )
     return renderedComponent
   },
   _bindAutoBindMethods () {
@@ -323,10 +332,31 @@ const ZzeactCompositeComponentMixin = {
     this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE
     // When receiving props, calls to `setState` by `componentWillReceiveProps`
     // will set `this._pendingState` without triggering a re-render.
-    var nextState = this._pendingState || this.state
+    const nextState = this._pendingState || this.state
     this._pendingState = null
     this._receivePropsAndState(nextProps, nextState, transaction)
     this._compositeLifeCycleState = null
+  },
+  forceUpdate () {
+    const transaction = ZzeactComponent.ReactReconcileTransaction.getPooled()
+    transaction.perform(
+      this._performComponentUpdate,
+      this,
+      this.props,
+      this.state,
+      transaction
+    )
+    ZzeactComponent.ReactReconcileTransaction.release(transaction)
+  },
+  _assertValidProps (props) {
+    const propDeclarations = this.constructor.propDeclarations
+    const componentName = this.constructor.displayName
+    for (const propName in propDeclarations) {
+      const checkProp = propDeclarations[propName]
+      if (checkProp) {
+        checkProp(props, propName, componentName)
+      }
+    }
   },
 }
 
@@ -337,16 +367,13 @@ Object.assign(ZzeactCompositeComponentBase.prototype, ZzeactPropTransferer.Mixin
 Object.assign(ZzeactCompositeComponentBase.prototype, ZzeactCompositeComponentMixin)
 
 const ZzeactCompositeComponent = {
+  LifeCycle: CompositeLifeCycle,
+  Base: ZzeactCompositeComponentBase,
   /**
    * 类似于 16.x 版本中的 `React.Component` 方法
    * @param {*} props
    */
-  createClass (spec = {}) {
-    invariant(
-      spec.render,
-      'createClass(...): Class specification must implement a `render` method.'
-    )
-
+  createClass (spec) {
     class Constructor {
       constructor (initialProps, children) {
         // 当createClass方法返回的函数被再次调用时，也调用这个方法
@@ -368,6 +395,11 @@ const ZzeactCompositeComponent = {
     Constructor.prototype = new ZzeactCompositeComponentBase()
     Constructor.prototype.constructor = Constructor
     mixSpecIntoComponent(Constructor, spec)
+
+    invariant(
+      Constructor.prototype.render,
+      'createClass(...): Class specification must implement a `render` method.'
+    )
 
     /**
      * 这里之所以没有使用 `class` 代替，是因为在后面调用时候省略 `new` 操作符

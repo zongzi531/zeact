@@ -116,7 +116,7 @@ const DOMPropertyNames = {
 }
 
 const DOMMutationMethods = {
-  className: function (node, value) {
+  className (node, value) {
     node.className = value || ''
   },
 }

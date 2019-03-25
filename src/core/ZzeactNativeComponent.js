@@ -47,6 +47,7 @@ export default class ZzeactNativeComponent {
 ZzeactNativeComponent.Mixin = {
   mountComponent (rootID, transaction) {
     ZzeactComponent.Mixin.mountComponent.call(this, rootID, transaction)
+    assertValidProps(this.props)
     return (
       this._createOpenTagMarkup() +
       this._createContentMarkup(transaction) +

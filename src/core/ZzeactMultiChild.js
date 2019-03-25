@@ -7,7 +7,6 @@ const ZzeactMultiChildMixin = {
     this.domOperations = this.domOperations || []
     this.domOperations.push({ insertMarkup: markup, finalIndex: insertAt })
   },
-
   enqueueMove (originalIndex, finalIndex) {
     this.domOperations = this.domOperations || []
     this.domOperations.push({ moveFrom: originalIndex, finalIndex: finalIndex })

@@ -1,4 +1,4 @@
-import keyOf from '../vendor/core/keyOf'
+import keyOf from '@/vendor/core/keyOf'
 import insertNodeAt from './insertNodeAt'
 import Danger from './Danger'
 
@@ -67,8 +67,8 @@ const setTextNodeValueAtIndex = (parent, index, val) => {
 
 const DOMChildrenOperations = {
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
-  manageChildren: manageChildren,
-  setTextNodeValueAtIndex: setTextNodeValueAtIndex,
+  manageChildren,
+  setTextNodeValueAtIndex,
 }
 
 export default DOMChildrenOperations

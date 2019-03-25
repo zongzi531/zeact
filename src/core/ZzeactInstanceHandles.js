@@ -60,6 +60,7 @@ const traverseParentPath = (start, stop, cb, arg, skipFirst, skipLast) => {
 }
 
 const ZzeactInstanceHandles = {
+  separator: SEPARATOR,
   getFirstZzeactDOM (node) {
     // 这个方法我理解就是在当前 node 下，获取最早的 Zzeact 节点
     let current = node
