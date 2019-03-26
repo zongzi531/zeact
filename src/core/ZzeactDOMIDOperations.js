@@ -3,7 +3,7 @@ import ZzeactDOMNodeCache from './ZzeactDOMNodeCache'
 import DOMPropertyOperations from '@/domUtils/DOMPropertyOperations'
 import CSSPropertyOperations from '@/domUtils/CSSPropertyOperations'
 import getTextContentAccessor from '@/domUtils/getTextContentAccessor'
-import DOMChildrenOperations from '../domUtils/DOMChildrenOperations'
+import DOMChildrenOperations from '@/domUtils/DOMChildrenOperations'
 
 const textContentAccessor = getTextContentAccessor() || 'NA'
 

@@ -13,7 +13,7 @@ const injection = {
     injection.InstanceHandle = InjectedInstanceHandle
   },
   validate () {
-    var invalid = !injection.InstanceHandle ||
+    const invalid = !injection.InstanceHandle ||
       !injection.InstanceHandle.traverseTwoPhase ||
       !injection.InstanceHandle.traverseEnterLeave
     if (invalid) {

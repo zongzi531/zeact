@@ -7,6 +7,7 @@ const SEPARATOR_LENGTH = SEPARATOR.length
 
 const MAX_TREE_DEPTH = 100
 
+// 通过第一位判断是否为 Zzeact 组件
 const isRenderedByZzeact = node => {
   const id = getDOMNodeID(node)
   return id && id.charAt(0) === SEPARATOR
@@ -18,6 +19,7 @@ const isValidID = id => id === '' || (
   id.charAt(0) === SEPARATOR && id.charAt(id.length - 1) !== SEPARATOR
 )
 
+// 获取父 ID
 const parentID = id => id ? id.substr(0, id.lastIndexOf(SEPARATOR)) : ''
 
 const traverseParentPath = (start, stop, cb, arg, skipFirst, skipLast) => {
@@ -39,6 +41,8 @@ const traverseParentPath = (start, stop, cb, arg, skipFirst, skipLast) => {
   )
   // Traverse from `start` to `stop` one depth at a time.
   let depth = 0
+  // parentID 就是从后往前取
+  // ZzeactInstanceHandles.nextDescendantID 就是从前往后取
   const traverse = traverseUp ? parentID : ZzeactInstanceHandles.nextDescendantID
   // 这里的判断就是一级级取父级
   for (let id = start; /* until break */; id = traverse(id, stop)) {
@@ -73,7 +77,7 @@ const ZzeactInstanceHandles = {
     return null
   },
   findComponentRoot (ancestorNode, id) {
-    var child = ancestorNode.firstChild
+    const child = ancestorNode.firstChild
     while (child) {
       if (id === child.id) {
         return child

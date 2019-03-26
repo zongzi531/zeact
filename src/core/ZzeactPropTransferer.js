@@ -2,6 +2,7 @@ import emptyFunction from '@/vendor/core/emptyFunction'
 import joinClasses from '@/utils/joinClasses'
 import merge from '@/utils/merge'
 
+// 执行对应的方法
 const createTransferStrategy = mergeStrategy => {
   return function (props, key, value) {
     if (!props.hasOwnProperty(key)) {

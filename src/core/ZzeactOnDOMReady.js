@@ -7,10 +7,12 @@ export default class ZzeactOnDOMReady {
 }
 
 Object.assign(ZzeactOnDOMReady.prototype, {
+  // 加入队列
   enqueue (component, callback) {
     this._queue = this._queue || []
     this._queue.push({ component, callback })
   },
+  // 通知所有，执行队列所有方法
   notifyAll () {
     const queue = this._queue
     if (queue) {
@@ -22,9 +24,11 @@ Object.assign(ZzeactOnDOMReady.prototype, {
       queue.length = 0
     }
   },
+  // 重置队列
   reset () {
     this._queue = null
   },
+  // PooledClass 使用所需
   destructor () {
     // 手动释放内存
     this.reset()

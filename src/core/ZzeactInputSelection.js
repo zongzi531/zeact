@@ -6,6 +6,8 @@ const getActiveElement = () => {
 }
 
 const ZzeactInputSelection = {
+  // 是否具有选择功能
+  // BODY 的 contentEditable 为 inherit
   hasSelectionCapabilities (elem) {
     return elem && (
       (elem.nodeName === 'INPUT' && elem.type === 'text') ||
@@ -13,6 +15,7 @@ const ZzeactInputSelection = {
       elem.contentEditable === 'true'
     )
   },
+  // 获得 document.activeElement 当前激活元素的信息
   getSelectionInformation () {
     const focusedElem = getActiveElement()
     return {
@@ -38,6 +41,7 @@ const ZzeactInputSelection = {
       priorFocusedElem.focus()
     }
   },
+  // 具体的选择功能相关方法 get 和 set
   getSelection (input) {
     let range
     if (input.contentEditable === 'true' && window.getSelection) {

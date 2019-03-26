@@ -117,7 +117,9 @@ const handleTopLevel = (topLevelType, nativeEvent, renderedTargetID, renderedTar
     renderedTarget
   )
 
+  // 加入队列
   EventPluginHub.enqueueAbstractEvents(abstractEvents)
+  // 执行队列
   EventPluginHub.processAbstractEventQueue()
 }
 

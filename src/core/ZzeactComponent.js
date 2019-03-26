@@ -32,13 +32,14 @@ const ZzeactComponent = {
   LifeCycle: ComponentLifeCycle,
   // 一些 DOM 操作相关的工具方法
   DOMIDOperations: ZzeactDOMIDOperations,
-  // 这里还需要具体分析下
+  // 处理事务所需要用的工具
   ZzeactReconcileTransaction,
   // 这个方法是用来修改 DOMIDOperations 的
   setDOMOperations: DOMIDOperations => { ZzeactComponent.DOMIDOperations = DOMIDOperations },
   // 这个方法暴露出来像是可以自己修改这个 ZzeactReconcileTransaction，但是这个方法并没有暴露给外界
   setZzeactReconcileTransaction: ZzeactReconcileTransaction => { ZzeactComponent.ZzeactReconcileTransaction = ZzeactReconcileTransaction },
   Mixin: {
+    // 获取真实的 DOM 节点
     getDOMNode () {
       invariant(
         ExecutionEnvironment.canUseDOM,
@@ -95,6 +96,7 @@ const ZzeactComponent = {
       )
 
       const props = this.props
+      // 判断若 ref 存在 添加 props[OWNER] 至 this.ref[props.ref]
       if (props.ref != null) {
         ZzeactOwner.addComponentAsRefTo(this, props.ref, props[OWNER])
       }
@@ -148,6 +150,7 @@ const ZzeactComponent = {
       )
 
       const props = this.props
+      // 移除对应的 ref
       if (props.ref != null) {
         ZzeactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER])
       }
@@ -168,6 +171,7 @@ const ZzeactComponent = {
         'receiveProps(...): Can only update a mounted component.'
       )
       const props = this.props
+      // 替换 ref
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`.

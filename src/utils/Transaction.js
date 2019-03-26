@@ -114,6 +114,8 @@ const Mixin = {
   isInTransaction () {
     return !!this._isInTransaction
   },
+  // 事务的能力是可以在 initializeAll 时将函数返回值记入
+  // 在 closeAll 时重新使用到返回值
   perform (method, scope, a, b, c, d, e, f) {
     throwIf(this.isInTransaction(), DUAL_TRANSACTION)
     const memberStart = Date.now()

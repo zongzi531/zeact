@@ -114,6 +114,7 @@ const ZzeactDOM = objMapKeyVal({
   text: false,
 }, createDOMComponentClass)
 
+// 用于覆盖上面工厂函数执行出来的方法
 const injection = {
   injectComponentClasses: function (componentClasses) {
     mergeInto(ZzeactDOM, componentClasses)

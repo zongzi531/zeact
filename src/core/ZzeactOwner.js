@@ -1,5 +1,6 @@
 import invariant from '@/vendor/core/invariant'
 
+// ref 相关的绑定
 const ZzeactOwner = {
   isValidOwner (object) {
     return !!(

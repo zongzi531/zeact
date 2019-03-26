@@ -18,6 +18,7 @@ Object.assign(ZzeactTextComponent.prototype, {
   receiveProps (nextProps, transaction) {
     if (nextProps.text !== this.props.text) {
       this.props.text = nextProps.text
+      // 更新 content
       ZzeactComponent.DOMIDOperations.updateTextContentByID(
         this._rootNodeID,
         nextProps.text

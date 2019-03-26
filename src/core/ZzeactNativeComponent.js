@@ -48,6 +48,7 @@ ZzeactNativeComponent.Mixin = {
   mountComponent (rootID, transaction) {
     ZzeactComponent.Mixin.mountComponent.call(this, rootID, transaction)
     assertValidProps(this.props)
+    // 拼接 markup
     return (
       this._createOpenTagMarkup() +
       this._createContentMarkup(transaction) +
@@ -122,8 +123,10 @@ ZzeactNativeComponent.Mixin = {
     return ''
   },
   unmountComponent () {
+    // 卸载组件
     ZzeactComponent.Mixin.unmountComponent.call(this)
     this.unmountMultiChild()
+    // 移除监听
     ZzeactEvent.deleteAllListeners(this._rootNodeID)
   },
   receiveProps (nextProps, transaction) {
@@ -133,8 +136,11 @@ ZzeactNativeComponent.Mixin = {
     )
     assertValidProps(nextProps)
     ZzeactComponent.Mixin.receiveProps.call(this, nextProps, transaction)
+    // 更新 DOM 属性
     this._updateDOMProperties(nextProps)
+    // 更新 DOM 子节点
     this._updateDOMChildren(nextProps, transaction)
+    // 更新 props
     this.props = nextProps
   },
   _updateDOMProperties (nextProps) {
@@ -162,6 +168,7 @@ ZzeactNativeComponent.Mixin = {
           }
         }
         if (styleUpdates) {
+          // 更新 styles
           ZzeactComponent.DOMIDOperations.updateStylesByID(
             this._rootNodeID,
             styleUpdates
@@ -171,19 +178,23 @@ ZzeactNativeComponent.Mixin = {
         const lastHtml = lastProp && lastProp.__html
         const nextHtml = nextProp && nextProp.__html
         if (lastHtml !== nextHtml) {
+          // 更新 innerHTML
           ZzeactComponent.DOMIDOperations.updateInnerHTMLByID(
             this._rootNodeID,
             nextProp
           )
         }
       } else if (propKey === CONTENT) {
+        // 更新 content
         ZzeactComponent.DOMIDOperations.updateTextContentByID(
           this._rootNodeID,
           '' + nextProp
         )
       } else if (registrationNames[propKey]) {
+        // 注册对应事件
         putListener(this._rootNodeID, propKey, nextProp)
       } else {
+        // 更新属性
         ZzeactComponent.DOMIDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
@@ -215,9 +226,11 @@ ZzeactNativeComponent.Mixin = {
     if (contentToUse != null) {
       const childrenRemoved = lastUsedChildren != null && childrenToUse == null
       if (childrenRemoved) {
+        // 更新多子节点
         this.updateMultiChild(null, transaction)
       }
       if (lastUsedContent !== contentToUse) {
+        // 更新 content
         ZzeactComponent.DOMIDOperations.updateTextContentByID(
           this._rootNodeID,
           '' + contentToUse
@@ -226,11 +239,13 @@ ZzeactNativeComponent.Mixin = {
     } else {
       const contentRemoved = lastUsedContent != null && contentToUse == null
       if (contentRemoved) {
+        // 更新 content
         ZzeactComponent.DOMIDOperations.updateTextContentByID(
           this._rootNodeID,
           ''
         )
       }
+      // 更新多子节点
       this.updateMultiChild(flattenChildren(nextProps.children), transaction)
     }
   },

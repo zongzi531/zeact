@@ -18,6 +18,7 @@ export default {
       'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
     })
 
+    // 改变那个危险的 form
     ZzeactDOM.injection.injectComponentClasses({
       form: ZzeactDOMForm,
     })

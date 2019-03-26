@@ -47,12 +47,11 @@ const forEachEventDispatch = (abstractEvent, cb) => {
 }
 
 const executeDispatchesInOrderStopAtTrue = abstractEvent => {
-  var dispatchListeners = abstractEvent._dispatchListeners
-  var dispatchIDs = abstractEvent._dispatchIDs
+  const dispatchListeners = abstractEvent._dispatchListeners
+  const dispatchIDs = abstractEvent._dispatchIDs
   if (Array.isArray(dispatchListeners)) {
-    var i
     for (
-      i = 0;
+      let i = 0;
       i < dispatchListeners.length && !abstractEvent.isPropagationStopped;
       i++) {
       // Listeners and IDs are two parallel arrays that are always in sync.
@@ -69,13 +68,13 @@ const executeDispatchesInOrderStopAtTrue = abstractEvent => {
 }
 
 const executeDirectDispatch = abstractEvent => {
-  var dispatchListener = abstractEvent._dispatchListeners
-  var dispatchID = abstractEvent._dispatchIDs
+  const dispatchListener = abstractEvent._dispatchListeners
+  const dispatchID = abstractEvent._dispatchIDs
   invariant(
     !Array.isArray(dispatchListener),
     'executeDirectDispatch(...): Invalid `abstractEvent`.'
   )
-  var res = dispatchListener
+  const res = dispatchListener
     ? dispatchListener(abstractEvent, dispatchID)
     : null
   abstractEvent._dispatchListeners = null

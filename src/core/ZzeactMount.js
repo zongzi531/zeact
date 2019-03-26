@@ -45,18 +45,24 @@ const ZzeactMount = {
     renderCallback()
   },
   prepareTopLevelEvents (TopLevelCallbackCreator) {
+    // 是否使用 useTouchEvents 的标记
     ZzeactEvent.ensureListening(ZzeactMount.useTouchEvents, TopLevelCallbackCreator)
   },
   renderComponent (nextComponent, container) {
+    // 获取之前的组件
     const prevComponent = instanceByZzeactRootID[getZzeactRootID(container)]
     if (prevComponent) {
       if (prevComponent.constructor === nextComponent.constructor) {
+        // 新的 props
         const nextProps = nextComponent.props
         ZzeactMount.scrollMonitor(container, () => {
+          // 之前的组件更新 props
           prevComponent.replaceProps(nextProps)
         })
+        // 返回之前的组件
         return prevComponent
       } else {
+        // 卸载之前的组件
         ZzeactMount.unmountAndReleaseZzeactRootNode(container)
       }
     }
@@ -64,9 +70,13 @@ const ZzeactMount = {
     // 注册事件
     ZzeactMount.prepareTopLevelEvents(ZzeactEventTopLevelCallback)
 
+    // 注册 ID
     const zzeactRootID = ZzeactMount.registerContainer(container)
+    // cache ID
     instanceByZzeactRootID[zzeactRootID] = nextComponent
+    // 挂载新组件
     nextComponent.mountComponentIntoNode(zzeactRootID, container)
+    // 返回新组件
     return nextComponent
   },
   createComponentRenderer (component) {
@@ -94,10 +104,15 @@ const ZzeactMount = {
     return zzeactRootID
   },
   unmountAndReleaseZzeactRootNode (container) {
+    // 获得 ID
     const zzeactRootID = getZzeactRootID(container)
+    // 获得 cache 组件
     const component = instanceByZzeactRootID[zzeactRootID]
+    // 卸载组件
     component.unmountComponentFromNode(container)
+    // 释放内存
     delete instanceByZzeactRootID[zzeactRootID]
+    // 释放内存
     delete containersByZzeactRootID[zzeactRootID]
   },
   findZzeactContainerForID (id) {
