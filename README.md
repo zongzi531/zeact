@@ -1,15 +1,10 @@
 # Zzeact
 
-Zzeact is a JavaScript library to learn the source code of React.
+Zzeact is a JavaScript library to learn the source code of React `v16.8.6`.
 
-## Todo
+## ~~Todo~~
 
-- [x] **DOM render**
-- [x] **Event**
-- [x] **LifeCycle**
-- [x] **React Components**
-- [x] **Components Update**
-- [ ] **JSX**
+That's new version.
 
 ## Install
 
@@ -21,7 +16,7 @@ yarn add zzeact
 npm install zzeact --save
 ```
 
-## Quick Start
+## ~~Quick Start~~
 
 ```javascript
 var Examples = Zzeact.createClass({
@@ -43,7 +38,7 @@ Zzeact.renderComponent(
 )
 ```
 
-Now, You can using `type="text/jsx"` beacuse i integrated `JSXTransformer.js`
+~~Now, You can using `type="text/jsx"` beacuse i integrated `JSXTransformer.js`~~
 
 ```jsx
 /**
@@ -62,7 +57,7 @@ Zzeact.renderComponent(
 )
 ```
 
-Or, you can see [examples](https://github.com/zongzi531/zzeact/tree/master/examples).
+~~Or, you can see [examples](https://github.com/zongzi531/zzeact/tree/master/examples).~~
 
 ## License
 
