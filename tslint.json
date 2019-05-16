@@ -1,0 +1,17 @@
+{
+  "extends": "tslint:recommended",
+  "rulesDirectory": [
+    "packages/"
+  ],
+  "rules": {
+    "quotemark": [
+      true,
+      "single",
+      "jsx-double"
+    ],
+    "semicolon": [
+      true,
+      "never"
+    ]
+  }
+}
