@@ -9,6 +9,7 @@
     }
   },
   "include": [
-    "packages/**/*"
+    "packages/**/*",
+    "shims.d.ts"
   ]
 }
