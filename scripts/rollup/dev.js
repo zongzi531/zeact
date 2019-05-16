@@ -2,7 +2,7 @@ const { createBuild } = require('./utils')
 const { rollupConfig, rollupOutputOptions } = require('./config')
 const rollupServe = require('rollup-plugin-serve')
 
-const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3001
+const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000
 const HOST = process.env.HOST || '0.0.0.0'
 
 createBuild({
