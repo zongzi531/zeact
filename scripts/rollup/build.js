@@ -1,11 +1,8 @@
-const { createBuild } = require('./utils')
-const { rollupConfig, rollupOutputOptions } = require('./config')
+const { buildEverything } = require('./utils')
 const rollupUglify = require('rollup-plugin-uglify')
 
-createBuild({
-  rollupConfig,
-  rollupOutputOptions,
+buildEverything({
   plugins: [
     rollupUglify.uglify(),
-  ]
+  ],
 })

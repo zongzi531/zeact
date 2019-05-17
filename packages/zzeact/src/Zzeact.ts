@@ -1,11 +1,14 @@
 import ZzeactVersion from '@/shared/ZzeactVersion'
+import { createElement } from './ZzeactElement'
 
 interface IZzeact {
-  version: string
+  createElement: createElement
   default?: any
+  version: string
 }
 
 const Zzeact: IZzeact = {
+  createElement,
   version: ZzeactVersion,
 }
 

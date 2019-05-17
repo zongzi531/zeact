@@ -1,13 +1,10 @@
-const { createBuild } = require('./utils')
-const { rollupConfig, rollupOutputOptions } = require('./config')
+const { buildEverything } = require('./utils')
 const rollupServe = require('rollup-plugin-serve')
 
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000
 const HOST = process.env.HOST || '0.0.0.0'
 
-createBuild({
-  rollupConfig,
-  rollupOutputOptions,
+buildEverything({
   plugins: [
     rollupServe({
       contentBase: ['dist', 'examples'],
@@ -15,8 +12,5 @@ createBuild({
       port: DEFAULT_PORT,
     }),
   ],
-  lastCallBack: () => rollup.watch({
-    ...rollupConfig,
-    output: [rollupOutputOptions],
-  }),
+  isWatch: true,
 })

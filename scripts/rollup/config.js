@@ -1,33 +1,42 @@
+const path = require('path')
 const rollupTypescript = require('rollup-plugin-typescript')
 const rollupAlias = require('rollup-plugin-alias')
 const rollupJson = require('rollup-plugin-json')
-const { packageRoot, PackageJSON } = require('./utils')
 
-const entry = entryName => require.resolve(packageRoot('packages', entryName, 'index.ts'))
+const DOUBLE_POINT = '..'
+const PATH_SRC = 'packages'
+const PATH_ROOT = ''
+const DEFAULT_INDEX_FILE = 'index.ts'
+const BASE_DIR = 'dist/'
+const BASE_SUFFIX = 'js'
 
-const resolvedEntry = entry('zzeact')
+const packageRoot = (...paths) => path.join(__dirname, DOUBLE_POINT, DOUBLE_POINT, ...paths)
 
-const rollupConfig = {
-  input: resolvedEntry,
+const resolvedEntry = entryName => require.resolve(packageRoot(PATH_SRC, entryName, DEFAULT_INDEX_FILE))
+
+const getFileName = (global, format) => BASE_DIR + [global, format, BASE_SUFFIX].join('.')
+
+const getRollupConfig = ({ entry }) => ({
+  input: resolvedEntry(entry),
   plugins: [
     rollupTypescript(),
     rollupAlias({
       resolve: ['.ts'],
-      '@': packageRoot('packages'),
-      '~': packageRoot(''),
+      '@': packageRoot(PATH_SRC),
+      '~': packageRoot(PATH_ROOT),
     }),
     rollupJson(),
   ],
-}
+})
 
-const rollupOutputOptions = {
-  file: PackageJSON.main,
-  format: 'umd',
-  name: 'Zzeact',
-  sourcemap: true,
-}
+const getRollupOutputOptions = ({ entry, global, format, sourcemap = true }) => ({
+  file: getFileName(global, format),
+  format,
+  name: global,
+  sourcemap,
+})
 
 module.exports = {
-  rollupConfig,
-  rollupOutputOptions,
+  getRollupConfig,
+  getRollupOutputOptions,
 }
