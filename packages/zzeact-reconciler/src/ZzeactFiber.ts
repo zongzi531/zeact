@@ -6,7 +6,7 @@
 import { IRefObject } from '@/shared/ZzeactTypes'
 import { WorkTag } from '@/shared/ZzeactWorkTags'
 
-type RefFunAndStr = ((handle: any) => void) & { _stringRef?: string }
+type RefFunAndStr = ((handle: mixed) => void) & { _stringRef?: string }
 
 export interface IFiber {
   tag: WorkTag
