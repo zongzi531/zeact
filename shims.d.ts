@@ -6,11 +6,11 @@ declare module '*.json' {
 
 type mixed = any
 
-type React$Element<T> = T
+type Zzeact$Element<T> = T
 
-type React$Component<T, P> = T | P
+type Zzeact$Component<T, P> = T | P
 
-type ReactNodeList = any
+type ZzeactNodeList = any
 
 type FiberRootBatch = any
 

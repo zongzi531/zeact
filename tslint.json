@@ -12,6 +12,8 @@
     "semicolon": [
       true,
       "never"
-    ]
+    ],
+    "no-conditional-assignment": false,
+    "arrow-parens": false
   }
 }

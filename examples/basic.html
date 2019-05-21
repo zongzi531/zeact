@@ -14,8 +14,10 @@
       <p>If you can see this, Zzeact is not working right.</p>
     </div>
     <script>
-      console.log(Zzeact)
-      console.log(ZzeactDOM)
+      ZzeactDOM.render(
+        Zzeact.createElement('div', null, 'Zzeact has been successfully running.'),
+        document.getElementById('root')
+      )
     </script>
   </body>
 </html>

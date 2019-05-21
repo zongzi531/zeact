@@ -1,10 +1,12 @@
-
-/**
- *  暂时停留至此，没写完
- */
-
+import { ISource } from '@/shared/ZzeactElementType'
+import { SideEffectTag } from '@/shared/ZzeactSideEffectTags'
 import { IRefObject } from '@/shared/ZzeactTypes'
 import { WorkTag } from '@/shared/ZzeactWorkTags'
+import { ExpirationTime } from './ZzeactFiberExpirationTime'
+import { HookType } from './ZzeactFiberHooks'
+import { IContextDependencyList } from './ZzeactFiberNewContext'
+import { TypeOfMode } from './ZzeactTypeOfMode'
+import { IUpdateQueue } from './ZzeactUpdateQueue'
 
 type RefFunAndStr = ((handle: mixed) => void) & { _stringRef?: string }
 
@@ -21,4 +23,24 @@ export interface IFiber {
   ref: null | RefFunAndStr | IRefObject
   pendingProps: any
   memoizedProps: any
+  updateQueue: IUpdateQueue<any> | null
+  memoizedState: any
+  contextDependencies: IContextDependencyList | null
+  mode: TypeOfMode
+  effectTag: SideEffectTag
+  nextEffect: IFiber | null
+  firstEffect: IFiber | null
+  lastEffect: IFiber | null
+  expirationTime: ExpirationTime
+  childExpirationTime: ExpirationTime
+  alternate: IFiber | null
+  actualDuration?: number
+  actualStartTime?: number
+  selfBaseDuration?: number
+  treeBaseDuration?: number
+  _debugID?: number
+  _debugSource?: ISource | null
+  _debugOwner?: IFiber | null
+  _debugIsCurrentlyTiming?: boolean
+  _debugHookTypes?: HookType[] | null
 }
