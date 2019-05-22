@@ -1,7 +1,64 @@
+import {
+  __interactionsRef,
+  __subscriberRef,
+} from '@/scheduler/tracing'
 import invariant from '@/shared/invariant'
+import {
+  enableSchedulerTracing,
+} from '@/shared/ZzeactFeatureFlags'
 import { HostRoot } from '@/shared/ZzeactWorkTags'
+import { recordScheduleUpdate } from './ZzeactDebugFiberPerf'
 import { IFiber } from './ZzeactFiber'
-import { ExpirationTime } from './ZzeactFiberExpirationTime'
+import { ExpirationTime, NoWork } from './ZzeactFiberExpirationTime'
+import {
+  unwindInterruptedWork,
+} from './ZzeactFiberUnwindWork'
+
+let isWorking: boolean = false
+
+let nextUnitOfWork: IFiber | null = null
+let nextRoot: FiberRoot | null = null
+let nextRenderExpirationTime: ExpirationTime = NoWork
+let nextLatestAbsoluteTimeoutMs: number = -1
+let nextRenderDidError: boolean = false
+
+let nextEffect: IFiber | null = null
+
+let isCommitting: boolean = false
+let rootWithPendingPassiveEffects: FiberRoot | null = null
+let passiveEffectCallbackHandle = null
+let passiveEffectCallback = null
+
+let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null
+
+let interruptedBy: IFiber | null = null
+
+function resetStack() {
+  if (nextUnitOfWork !== null) {
+    let interruptedWork = nextUnitOfWork.return
+    while (interruptedWork !== null) {
+      unwindInterruptedWork(interruptedWork)
+      interruptedWork = interruptedWork.return
+    }
+  }
+
+  nextRoot = null
+  nextRenderExpirationTime = NoWork
+  nextLatestAbsoluteTimeoutMs = -1
+  nextRenderDidError = false
+  nextUnitOfWork = null
+}
+
+function computeThreadID(
+  expirationTime: ExpirationTime,
+  interactionThreadID: number,
+): number {
+  // Interaction threads are unique per root and expiration time.
+  return expirationTime * 1000 + interactionThreadID
+}
+
+const NESTED_UPDATE_LIMIT = 50
+let nestedUpdateCount: number = 0
 
 function scheduleWorkToRoot(fiber: IFiber, expirationTime): FiberRoot | null {
   recordScheduleUpdate()
