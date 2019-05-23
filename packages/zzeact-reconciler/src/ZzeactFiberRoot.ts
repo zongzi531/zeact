@@ -1,4 +1,4 @@
-import { IInteraction } from '@/scheduler/src/Tracing'
+import { IInteraction, unstable_getThreadID } from '@/scheduler/tracing'
 import { enableSchedulerTracing } from '@/shared/ZzeactFeatureFlags'
 import { createHostRootFiber, IFiber } from './ZzeactFiber'
 import { ExpirationTime, NoWork } from './ZzeactFiberExpirationTime'
@@ -6,10 +6,10 @@ import { noTimeout, NoTimeout, TimeoutHandle } from './ZzeactFiberHostConfig'
 import { IThenable } from './ZzeactFiberScheduler'
 
 export interface IBatch {
-  _defer: boolean,
-  _expirationTime: ExpirationTime,
-  _onComplete: () => mixed,
-  _next: IBatch | null,
+  _defer: boolean
+  _expirationTime: ExpirationTime
+  _onComplete: () => mixed
+  _next: IBatch | null
 }
 
 export type PendingInteractionMap = Map<ExpirationTime, Set<IInteraction>>
@@ -92,9 +92,7 @@ export function createFiberRoot(
       earliestSuspendedTime: NoWork,
       latestSuspendedTime: NoWork,
       latestPingedTime: NoWork,
-
       didError: false,
-
       pendingCommitExpirationTime: NoWork,
       finishedWork: null,
       timeoutHandle: noTimeout,

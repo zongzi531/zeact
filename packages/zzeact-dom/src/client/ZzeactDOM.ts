@@ -152,7 +152,6 @@ function legacyRenderSubtreeIntoContainer(
         // originalCallback.call(instance)
       }
     }
-    // Initial mount should not be batched.
     // unbatchedUpdates(() => {
     //   if (parentComponent != null) {
     //     root.legacy_renderSubtreeIntoContainer(
@@ -173,7 +172,6 @@ function legacyRenderSubtreeIntoContainer(
         // originalCallback.call(instance)
       }
     }
-    // Update
     if (parentComponent != null) {
       root.legacy_renderSubtreeIntoContainer(
         parentComponent,
@@ -188,22 +186,22 @@ function legacyRenderSubtreeIntoContainer(
 }
 
 interface IWork {
-  _onCommit: () => void,
-  _callbacks: Array<() => mixed> | null,
-  _didCommit: boolean,
-  then(onCommit: () => mixed): void,
+  _onCommit: () => void
+  _callbacks: Array<() => mixed> | null
+  _didCommit: boolean
+  then(onCommit: () => mixed): void
 }
 
 interface IRoot {
-  _internalRoot: FiberRoot,
-  render(children: ZzeactNodeList, callback?: () => any): IWork,
-  unmount(callback?: () => any): IWork,
+  _internalRoot: FiberRoot
+  render(children: ZzeactNodeList, callback?: () => any): IWork
+  unmount(callback?: () => any): IWork
   legacy_renderSubtreeIntoContainer(
     parentComponent: Zzeact$Component<any, any>,
     children: ZzeactNodeList,
     callback?: () => any,
-  ): IWork,
-  createBatch(): Batch,
+  ): IWork
+  createBatch(): Batch
 }
 
 type Batch = FiberRootBatch & {

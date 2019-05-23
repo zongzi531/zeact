@@ -7,14 +7,14 @@ import { createCursor, IStackCursor, pop } from './ZzeactFiberStack'
 const valueCursor: IStackCursor<mixed> = createCursor(null)
 
 export interface IContextDependencyList {
-  first: IContextDependency<mixed>,
-  expirationTime: ExpirationTime,
+  first: IContextDependency<mixed>
+  expirationTime: ExpirationTime
 }
 
 interface IContextDependency<T> {
-  context: IZzeactContext<T>,
-  observedBits: number,
-  next: IContextDependency<mixed> | null,
+  context: IZzeactContext<T>
+  observedBits: number
+  next: IContextDependency<mixed> | null
 }
 
 export function popProvider(providerFiber: IFiber): void {

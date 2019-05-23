@@ -22,8 +22,6 @@ function popHostContainer(fiber: IFiber) {
 }
 
 function popHostContext(fiber: IFiber): void {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
   if (contextFiberStackCursor.current !== fiber) {
     return
   }

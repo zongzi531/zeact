@@ -41,7 +41,6 @@ export function updateContainerAtExpirationTime(
   expirationTime: ExpirationTime,
   callback?: () => any,
 ) {
-  // TODO: If this is a nested container, this won't be the root.
   const current = container.current
   // const context = getContextForSubtree(parentComponent)
   // if (container.context === null) {
@@ -61,8 +60,6 @@ function scheduleRootUpdate(
 ) {
 
   // const update = createUpdate(expirationTime)
-  // Caution: React DevTools currently depends on this property
-  // being called "element".
   // update.payload = {element}
 
   callback = callback === undefined ? null : callback

@@ -31,7 +31,7 @@ export default function invariant(
       error.name = 'Invariant Violation'
     }
 
-    error.framesToPop = 1 // we don't care about invariant's own frame
+    error.framesToPop = 1
     throw error
   }
 }
