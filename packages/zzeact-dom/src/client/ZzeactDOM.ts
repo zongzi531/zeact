@@ -1,4 +1,22 @@
 import invariant from '@/shared/invariant'
+import {
+  // computeUniqueAsyncExpiration,
+  // findHostInstanceWithNoPortals,
+  // updateContainerAtExpirationTime,
+  // flushRoot,
+  createContainer,
+  updateContainer,
+  // batchedUpdates,
+  // unbatchedUpdates,
+  // interactiveUpdates,
+  // flushInteractiveUpdates,
+  // flushSync,
+  // flushControlled,
+  // injectIntoDevTools,
+  // getPublicRootInstance,
+  // findHostInstance,
+  // findHostInstanceWithWarning,
+} from '@/zzeact-reconciler/inline.dom'
 import { ROOT_ATTRIBUTE_NAME } from '../shared/DOMProperty'
 import {
   COMMENT_NODE,
@@ -97,8 +115,8 @@ function ZzeactRoot(
   isConcurrent: boolean,
   hydrate: boolean,
 ) {
-  // const root = createContainer(container, isConcurrent, hydrate)
-  // this._internalRoot = root
+  const root = createContainer(container, isConcurrent, hydrate)
+  this._internalRoot = root
 }
 ZzeactRoot.prototype.render = function(
   children: ZzeactNodeList,
@@ -110,7 +128,7 @@ ZzeactRoot.prototype.render = function(
   if (callback !== null) {
     work.then(callback)
   }
-  // updateContainer(children, root, null, work._onCommit)
+  updateContainer(children, root, null, work._onCommit)
   return work
 }
 

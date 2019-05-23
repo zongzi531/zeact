@@ -15,3 +15,5 @@ type ZzeactNodeList = any
 type FiberRootBatch = any
 
 type FiberRoot = any
+
+type TimeoutID = any

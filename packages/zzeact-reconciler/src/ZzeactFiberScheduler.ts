@@ -9,10 +9,19 @@ import {
 import { HostRoot } from '@/shared/ZzeactWorkTags'
 import { recordScheduleUpdate } from './ZzeactDebugFiberPerf'
 import { IFiber } from './ZzeactFiber'
-import { ExpirationTime, NoWork } from './ZzeactFiberExpirationTime'
+import { ExpirationTime, msToExpirationTime, NoWork, Sync } from './ZzeactFiberExpirationTime'
+import { now } from './ZzeactFiberHostConfig'
+import {
+  markPendingPriorityLevel,
+} from './ZzeactFiberPendingPriority'
+import { FiberRoot, IBatch } from './ZzeactFiberRoot'
 import {
   unwindInterruptedWork,
 } from './ZzeactFiberUnwindWork'
+
+export interface IThenable {
+  then(resolve: () => mixed, reject?: () => mixed): mixed
+}
 
 let isWorking: boolean = false
 
@@ -57,8 +66,33 @@ function computeThreadID(
   return expirationTime * 1000 + interactionThreadID
 }
 
+let firstScheduledRoot: FiberRoot | null = null
+let lastScheduledRoot: FiberRoot | null = null
+
+let callbackExpirationTime: ExpirationTime = NoWork
+let callbackID
+let isRendering: boolean = false
+let nextFlushedRoot: FiberRoot | null = null
+let nextFlushedExpirationTime: ExpirationTime = NoWork
+let lowestPriorityPendingInteractiveExpirationTime: ExpirationTime = NoWork
+let hasUnhandledError: boolean = false
+let unhandledError: mixed | null = null
+
+let isBatchingUpdates: boolean = false
+let isUnbatchingUpdates: boolean = false
+
+let completedBatches: IBatch[] | null = null
+
+let originalStartTimeMs: number = now()
+let currentRendererTime: ExpirationTime = msToExpirationTime(
+  originalStartTimeMs,
+);
+let currentSchedulerTime: ExpirationTime = currentRendererTime
+
+// Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50
 let nestedUpdateCount: number = 0
+let lastCommittedRootDuringThisBatch: FiberRoot | null = null
 
 function scheduleWorkToRoot(fiber: IFiber, expirationTime): FiberRoot | null {
   recordScheduleUpdate()
@@ -179,6 +213,177 @@ function scheduleWork(fiber: IFiber, expirationTime: ExpirationTime) {
   }
 }
 
+function performWorkOnRoot(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+  isYieldy: boolean,
+) {
+  invariant(
+    !isRendering,
+    'performWorkOnRoot was called recursively. This error is likely caused ' +
+      'by a bug in React. Please file an issue.',
+  )
+
+  isRendering = true
+
+  // Check if this is async work or sync/expired work.
+  if (!isYieldy) {
+    // Flush work without yielding.
+    // TODO: Non-yieldy work does not necessarily imply expired work. A renderer
+    // may want to perform some work without yielding, but also without
+    // requiring the root to complete (by triggering placeholders).
+
+    let finishedWork = root.finishedWork
+    if (finishedWork !== null) {
+      // This root is already complete. We can commit it.
+      completeRoot(root, finishedWork, expirationTime)
+    } else {
+      root.finishedWork = null;
+      // If this root previously suspended, clear its existing timeout, since
+      // we're about to try rendering again.
+      const timeoutHandle = root.timeoutHandle
+      if (timeoutHandle !== noTimeout) {
+        root.timeoutHandle = noTimeout
+        // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
+        cancelTimeout(timeoutHandle)
+      }
+      renderRoot(root, isYieldy)
+      finishedWork = root.finishedWork
+      if (finishedWork !== null) {
+        // We've completed the root. Commit it.
+        completeRoot(root, finishedWork, expirationTime)
+      }
+    }
+  } else {
+    // Flush async work.
+    let finishedWork = root.finishedWork
+    if (finishedWork !== null) {
+      // This root is already complete. We can commit it.
+      completeRoot(root, finishedWork, expirationTime)
+    } else {
+      root.finishedWork = null
+      // If this root previously suspended, clear its existing timeout, since
+      // we're about to try rendering again.
+      const timeoutHandle = root.timeoutHandle
+      if (timeoutHandle !== noTimeout) {
+        root.timeoutHandle = noTimeout
+        // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
+        cancelTimeout(timeoutHandle)
+      }
+      renderRoot(root, isYieldy)
+      finishedWork = root.finishedWork
+      if (finishedWork !== null) {
+        // We've completed the root. Check the if we should yield one more time
+        // before committing.
+        if (!shouldYieldToRenderer()) {
+          // Still time left. Commit the root.
+          completeRoot(root, finishedWork, expirationTime)
+        } else {
+          // There's no time left. Mark this root as complete. We'll come
+          // back and commit it later.
+          root.finishedWork = finishedWork
+        }
+      }
+    }
+  }
+
+  isRendering = false
+}
+
+function performSyncWork() {
+  performWork(Sync, false)
+}
+
+function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
+  // Keep working on roots until there's no more work, or until there's a higher
+  // priority event.
+  findHighestPriorityRoot()
+
+  if (isYieldy) {
+    recomputeCurrentRendererTime()
+    currentSchedulerTime = currentRendererTime
+
+    if (enableUserTimingAPI) {
+      const didExpire = nextFlushedExpirationTime > currentRendererTime
+      const timeout = expirationTimeToMs(nextFlushedExpirationTime)
+      stopRequestCallbackTimer(didExpire, timeout)
+    }
+
+    while (
+      nextFlushedRoot !== null &&
+      nextFlushedExpirationTime !== NoWork &&
+      minExpirationTime <= nextFlushedExpirationTime &&
+      !(didYield && currentRendererTime > nextFlushedExpirationTime)
+    ) {
+      performWorkOnRoot(
+        nextFlushedRoot,
+        nextFlushedExpirationTime,
+        currentRendererTime > nextFlushedExpirationTime,
+      );
+      findHighestPriorityRoot()
+      recomputeCurrentRendererTime()
+      currentSchedulerTime = currentRendererTime
+    }
+  } else {
+    while (
+      nextFlushedRoot !== null &&
+      nextFlushedExpirationTime !== NoWork &&
+      minExpirationTime <= nextFlushedExpirationTime
+    ) {
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false)
+      findHighestPriorityRoot()
+    }
+  }
+
+  // We're done flushing work. Either we ran out of time in this callback,
+  // or there's no more work left with sufficient priority.
+
+  // If we're inside a callback, set this to false since we just completed it.
+  if (isYieldy) {
+    callbackExpirationTime = NoWork
+    callbackID = null
+  }
+  // If there's work left over, schedule a new callback.
+  if (nextFlushedExpirationTime !== NoWork) {
+    scheduleCallbackWithExpirationTime(
+      nextFlushedRoot,
+      nextFlushedExpirationTime,
+    )
+  }
+
+  // Clean-up.
+  finishRendering()
+}
+
+function requestWork(root: FiberRoot, expirationTime: ExpirationTime) {
+  addRootToSchedule(root, expirationTime)
+  if (isRendering) {
+    // Prevent reentrancy. Remaining work will be scheduled at the end of
+    // the currently rendering batch.
+    return
+  }
+
+  if (isBatchingUpdates) {
+    // Flush work at the end of the batch.
+    if (isUnbatchingUpdates) {
+      // ...unless we're inside unbatchedUpdates, in which case we should
+      // flush it now.
+      nextFlushedRoot = root
+      nextFlushedExpirationTime = Sync
+      performWorkOnRoot(root, Sync, false)
+    }
+    return
+  }
+
+  // TODO: Get rid of Sync and use current time?
+  if (expirationTime === Sync) {
+    performSyncWork()
+  } else {
+    scheduleCallbackWithExpirationTime(root, expirationTime)
+  }
+}
+
 export {
   scheduleWork,
+  requestWork,
 }

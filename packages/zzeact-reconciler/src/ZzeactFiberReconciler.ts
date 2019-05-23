@@ -1,6 +1,8 @@
 import warningWithoutStack from '@/shared/warningWithoutStack'
 import { IFiber } from './ZzeactFiber'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
+import { Container } from './ZzeactFiberHostConfig'
+import { createFiberRoot } from './ZzeactFiberRoot'
 import { scheduleWork } from './ZzeactFiberScheduler'
 
 type OpaqueRoot = FiberRoot
@@ -22,6 +24,14 @@ export function updateContainer(
     expirationTime,
     callback,
   )
+}
+
+export function createContainer(
+  containerInfo: Container,
+  isConcurrent: boolean,
+  hydrate: boolean,
+): OpaqueRoot {
+  return createFiberRoot(containerInfo, isConcurrent, hydrate)
 }
 
 export function updateContainerAtExpirationTime(
