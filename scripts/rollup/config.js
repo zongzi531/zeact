@@ -2,6 +2,7 @@ const path = require('path')
 const rollupTypescript = require('rollup-plugin-typescript')
 const rollupAlias = require('rollup-plugin-alias')
 const rollupJson = require('rollup-plugin-json')
+const { eslint: rollupEslint } = require('rollup-plugin-eslint')
 
 const DOUBLE_POINT = '..'
 const PATH_SRC = 'packages'
@@ -19,6 +20,12 @@ const getFileName = (global, format) => BASE_DIR + [global, format, BASE_SUFFIX]
 const getRollupConfig = ({ entry }) => ({
   input: resolvedEntry(entry),
   plugins: [
+    rollupEslint({
+      exclude: [
+        'node_modules/**',
+        './package.json'
+      ],
+    }),
     rollupTypescript(),
     rollupAlias({
       resolve: ['.ts'],

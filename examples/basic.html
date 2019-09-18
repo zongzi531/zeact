@@ -8,12 +8,16 @@
     <link rel="stylesheet" href="./shared/css/base.css" />
     <script src="./Zzeact.umd.js"></script>
     <script src="./ZzeactDOM.umd.js"></script>
+    <script src="https://cdn.bootcss.com/react/16.8.6/umd/react.development.js"></script>
+    <script src="https://cdn.bootcss.com/react-dom/16.8.6/umd/react-dom.development.js"></script>
   </head>
   <body>
     <div id="root">
       <p>If you can see this, Zzeact is not working right.</p>
     </div>
     <script>
+      console.log(Zzeact, ZzeactDOM)
+      console.log(React, ReactDOM)
       ZzeactDOM.render(
         Zzeact.createElement('div', null, 'Zzeact has been successfully running.'),
         document.getElementById('root')

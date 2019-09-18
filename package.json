@@ -8,18 +8,27 @@
   "scripts": {
     "dev": "node scripts/rollup/dev.js",
     "build": "node scripts/rollup/build.js",
-    "lint": "tslint -c tslint.json -p tsconfig.json"
+    "lint": "eslint packages --ext .ts"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
   },
   "devDependencies": {
-    "rollup": "^1.12.0",
-    "rollup-plugin-alias": "^1.5.1",
+    "@typescript-eslint/eslint-plugin": "^2.3.0",
+    "@typescript-eslint/parser": "^2.3.0",
+    "eslint": "^6.4.0",
+    "husky": "^3.0.5",
+    "rollup": "^1.21.4",
+    "rollup-plugin-alias": "^2.0.0",
+    "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-serve": "^1.0.1",
     "rollup-plugin-typescript": "^1.0.1",
-    "rollup-plugin-uglify": "^6.0.2",
-    "tslib": "^1.9.3",
-    "tslint": "^5.16.0",
-    "typescript": "^3.4.5"
+    "rollup-plugin-uglify": "^6.0.3",
+    "tslib": "^1.10.0",
+    "typescript": "^3.6.3"
   },
   "keywords": [
     "react",
