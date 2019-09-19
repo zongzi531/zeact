@@ -5,8 +5,8 @@ declare module '*.json' {
   export const version: string
 }
 
-// ZzeactElement<any>
-interface ZzeactElement {
+// Zzeact$Element<any>
+type Zzeact$Element = {
   $$typeof: symbol | number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type: any
@@ -20,7 +20,14 @@ interface ZzeactElement {
   _owner: any
 }
 
-interface UsingDefault {
+// Zzeact$Component<T, P>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Zzeact$Component = any
+
+type possibleHasDefault<T> = T & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default?: any
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type mixed = any
