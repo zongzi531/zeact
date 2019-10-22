@@ -15,9 +15,9 @@ import {
   // updateContainerAtExpirationTime,
   // flushRoot,
   createContainer,
-  // updateContainer,
+  updateContainer,
   // batchedUpdates,
-  // unbatchedUpdates,
+  unbatchedUpdates,
   // interactiveUpdates,
   // flushInteractiveUpdates,
   // flushSync,
@@ -26,7 +26,7 @@ import {
   // getPublicRootInstance,
   // findHostInstance,
   // findHostInstanceWithWarning,
-} from 'zzeact-reconciler/inline.dom'
+} from '@/zzeact-reconciler/inline.dom'
 
 import invariant from '@/shared/invariant'
 
@@ -64,7 +64,6 @@ type Batch = FiberRootBatch & {
 type Root = {
   render(children: ZzeactNodeList, callback?: () => mixed): Work
   unmount(callback?: () => mixed): Work
-  // eslint-disable-next-line @typescript-eslint/camelcase
   legacy_renderSubtreeIntoContainer(
     parentComponent: Zzeact$Component,
     children: ZzeactNodeList,
@@ -82,6 +81,44 @@ type Work = {
   _didCommit: boolean
 }
 
+function ZzeactWork(): void {
+  this._callbacks = null
+  this._didCommit = false
+  this._onCommit = this._onCommit.bind(this)
+}
+ZzeactWork.prototype.then = function(onCommit: () => mixed): void {
+  if (this._didCommit) {
+    onCommit()
+    return
+  }
+  let callbacks = this._callbacks
+  if (callbacks === null) {
+    callbacks = this._callbacks = []
+  }
+  callbacks.push(onCommit)
+}
+ZzeactWork.prototype._onCommit = function(): void {
+  if (this._didCommit) {
+    return
+  }
+  this._didCommit = true
+  const callbacks = this._callbacks
+  if (callbacks === null) {
+    return
+  }
+  // TODO: Error handling.
+  for (let i = 0; i < callbacks.length; i++) {
+    const callback = callbacks[i]
+    invariant(
+      typeof callback === 'function',
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: %s',
+      callback,
+    )
+    callback()
+  }
+}
+
 function ZzeactRoot(
   container: DOMContainer,
   isConcurrent: boolean,
@@ -90,19 +127,13 @@ function ZzeactRoot(
   const root = createContainer(container, isConcurrent, hydrate)
   this._internalRoot = root
 }
-// ZzeactRoot.prototype.render = function(
-//   children: ZzeactNodeList,
-//   callback?: () => mixed,
-// ): Work {
-//   const root = this._internalRoot
-//   const work = new ZzeactWork()
-//   callback = callback === undefined ? null : callback
-//   if (callback !== null) {
-//     work.then(callback)
-//   }
-//   updateContainer(children, root, null, work._onCommit)
-//   return work
-// }
+ZzeactRoot.prototype.render = function(
+  children: ZzeactNodeList,
+  callback?: () => mixed,
+): Work {
+  // 发现这里与 ZzeactRoot.prototype.legacy_renderSubtreeIntoContainer 功能相同则替换写法
+  return this.legacy_renderSubtreeIntoContainer(null, children, callback)
+}
 // ZzeactRoot.prototype.unmount = function(callback?: () => mixed): Work {
 //   const root = this._internalRoot
 //   const work = new ZzeactWork()
@@ -113,21 +144,20 @@ function ZzeactRoot(
 //   updateContainer(null, root, null, work._onCommit)
 //   return work
 // }
-// eslint-disable-next-line @typescript-eslint/camelcase
-// ZzeactRoot.prototype.legacy_renderSubtreeIntoContainer = function(
-//   parentComponent: Zzeact$Component,
-//   children: ZzeactNodeList,
-//   callback?: () => mixed,
-// ): Work {
-//   const root = this._internalRoot
-//   const work = new ZzeactWork()
-//   callback = callback === undefined ? null : callback
-//   if (callback !== null) {
-//     work.then(callback)
-//   }
-//   updateContainer(children, root, parentComponent, work._onCommit)
-//   return work
-// }
+ZzeactRoot.prototype.legacy_renderSubtreeIntoContainer = function(
+  parentComponent: Zzeact$Component,
+  children: ZzeactNodeList,
+  callback?: () => mixed,
+): Work {
+  const root = this._internalRoot
+  const work = new ZzeactWork()
+  callback = callback === undefined ? null : callback
+  if (callback !== null) {
+    work.then(callback)
+  }
+  updateContainer(children, root, parentComponent, work._onCommit)
+  return work
+}
 // ZzeactRoot.prototype.createBatch = function(): Batch {
 //   const batch = new ZzeactBatch(this)
 //   const expirationTime = batch._expirationTime
@@ -210,7 +240,8 @@ function legacyRenderSubtreeIntoContainer(
   children: ZzeactNodeList,
   container: DOMContainer,
   forceHydrate: boolean,
-  callback?: Function,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback?: () => any,
 ): void {
   let root: Root = container._zzeactRootContainer
   if (!root) {
@@ -218,7 +249,6 @@ function legacyRenderSubtreeIntoContainer(
       container,
       forceHydrate,
     )
-    console.log(root, container._zzeactRootContainer)
     if (typeof callback === 'function') {
       // const originalCallback = callback;
       // callback = function() {
@@ -227,17 +257,17 @@ function legacyRenderSubtreeIntoContainer(
       // };
     }
     // // Initial mount should not be batched.
-    // unbatchedUpdates(() => {
-    //   if (parentComponent != null) {
-    //     root.legacy_renderSubtreeIntoContainer(
-    //       parentComponent,
-    //       children,
-    //       callback,
-    //     )
-    //   } else {
-    //     root.render(children, callback)
-    //   }
-    // })
+    unbatchedUpdates(() => {
+      if (parentComponent != null) {
+        root.legacy_renderSubtreeIntoContainer(
+          parentComponent,
+          children,
+          callback,
+        )
+      } else {
+        root.render(children, callback)
+      }
+    })
   }
   // } else {
   //   if (typeof callback === 'function') {
@@ -269,7 +299,8 @@ const ZzeactDOM = {
   render(
     element: Zzeact$Element,
     container: HTMLElement,
-    callback?: Function,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback?: () => any,
   ) {
     invariant(
       isValidContainer(container),

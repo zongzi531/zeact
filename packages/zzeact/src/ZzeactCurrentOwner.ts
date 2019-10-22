@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Fiber = any
+import { Fiber } from '@/zzeact-reconciler/src/ZzeactFiber'
 
 interface CurrentWrapper {
   current: null | Fiber
