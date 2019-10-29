@@ -1,3 +1,4 @@
+import { /* ZzeactElement, */ Source } from '@/shared/ZzeactElementType'
 import {/* ZzeactFragment, ZzeactPortal, */ RefObject } from '@/shared/ZzeactTypes'
 import { WorkTag } from '@/shared/ZzeactWorkTags'
 import { TypeOfMode } from './ZzeactTypeOfMode'
@@ -5,6 +6,7 @@ import { SideEffectTag } from '@/shared/ZzeactSideEffectTags'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
 import { UpdateQueue } from './ZzeactUpdateQueue'
 import { ContextDependencyList } from './ZzeactFiberNewContext'
+import { HookType } from './ZzeactFiberHooks'
 
 // import { enableProfilerTimer } from '@/shared/ZzeactFeatureFlags'
 
@@ -72,6 +74,12 @@ export type Fiber = {
   actualStartTime?: number
   selfBaseDuration?: number
   treeBaseDuration?: number
+
+  _debugID?: number
+  _debugSource?: Source | null
+  _debugOwner?: Fiber | null
+  _debugIsCurrentlyTiming?: boolean
+  _debugHookTypes?: Array<HookType> | null
 }
 
 function FiberNode(

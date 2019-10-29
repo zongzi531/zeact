@@ -1,3 +1,4 @@
+import { Fiber } from './ZzeactFiber'
 import { FiberRoot } from './ZzeactFiberRoot'
 import {
   // Instance,
@@ -8,13 +9,25 @@ import {
 import { ZzeactNodeList } from '@/shared/ZzeactTypes'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
 
+import { get as getInstance } from '@/shared/ZzeactInstanceMap'
+import { /* HostComponent, */ ClassComponent } from '@/shared/ZzeactWorkTags'
+import warningWithoutStack from '@/shared/warningWithoutStack'
+import {
+  findCurrentUnmaskedContext,
+  processChildContext,
+  emptyContextObject,
+  isContextProvider as isLegacyContextProvider,
+} from './ZzeactFiberContext'
+
 import { createFiberRoot } from './ZzeactFiberRoot'
+
+import { createUpdate, enqueueUpdate } from './ZzeactUpdateQueue'
 
 import {
   // computeUniqueAsyncExpiration,
   requestCurrentTime,
-  // computeExpirationForFiber,
-  // scheduleWork,
+  computeExpirationForFiber,
+  scheduleWork,
   // requestWork,
   // flushRoot,
   // batchedUpdates,
@@ -25,10 +38,78 @@ import {
   // syncUpdates,
   // interactiveUpdates,
   // flushInteractiveUpdates,
-  // flushPassiveEffects,
+  flushPassiveEffects,
 } from './ZzeactFiberScheduler'
 
 type OpaqueRoot = FiberRoot
+
+function getContextForSubtree(
+  parentComponent?: Zzeact$Component,
+): object {
+  if (!parentComponent) {
+    return emptyContextObject
+  }
+
+  const fiber = getInstance(parentComponent)
+  const parentContext = findCurrentUnmaskedContext(fiber)
+
+  if (fiber.tag === ClassComponent) {
+    const Component = fiber.type
+    if (isLegacyContextProvider(Component)) {
+      return processChildContext(fiber, Component, parentContext)
+    }
+  }
+
+  return parentContext
+}
+
+function scheduleRootUpdate(
+  current: Fiber,
+  element: ZzeactNodeList,
+  expirationTime: ExpirationTime,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback?: () => any,
+): ExpirationTime {
+  const update = createUpdate(expirationTime)
+  update.payload = {element}
+
+  callback = callback === undefined ? null : callback
+  if (callback !== null) {
+    warningWithoutStack(
+      typeof callback === 'function',
+      'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+      callback,
+    )
+    update.callback = callback
+  }
+
+  flushPassiveEffects()
+  enqueueUpdate(current, update)
+  scheduleWork(current, expirationTime)
+
+  return expirationTime
+}
+
+export function updateContainerAtExpirationTime(
+  element: ZzeactNodeList,
+  container: OpaqueRoot,
+  parentComponent: Zzeact$Component,
+  expirationTime: ExpirationTime,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback?: () => any,
+): ExpirationTime {
+  const current = container.current
+
+  const context = getContextForSubtree(parentComponent)
+  if (container.context === null) {
+    container.context = context
+  } else {
+    container.pendingContext = context
+  }
+
+  return scheduleRootUpdate(current, element, expirationTime, callback)
+}
 
 export function createContainer(
   containerInfo: Container,
@@ -42,22 +123,19 @@ export function updateContainer(
   element: ZzeactNodeList,
   container: OpaqueRoot,
   parentComponent?: Zzeact$Component,
-  callback?: Function,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback?: () => any,
 ): ExpirationTime {
   const current = container.current
   const currentTime = requestCurrentTime()
-
-  console.log('2019/10/22 Reading stop:', element, container, parentComponent, callback)
-  console.log('2019/10/22 Reading stop:', current, currentTime)
-  return currentTime
-  // const expirationTime = computeExpirationForFiber(currentTime, current)
-  // return updateContainerAtExpirationTime(
-  //   element,
-  //   container,
-  //   parentComponent,
-  //   expirationTime,
-  //   callback,
-  // )
+  const expirationTime = computeExpirationForFiber(currentTime, current)
+  return updateContainerAtExpirationTime(
+    element,
+    container,
+    parentComponent,
+    expirationTime,
+    callback,
+  )
 }
 
 export {

@@ -4,8 +4,8 @@
     "module": "esnext",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["packages/*"],
-      "~/*": ["*"]
+      "@/*": ["packages/*", "packages/*/index"],
+      "~/*": ["*"],
     }
   },
   "include": [
