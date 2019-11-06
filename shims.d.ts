@@ -24,6 +24,9 @@ type Zzeact$Element = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Zzeact$Component = any
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Zzeact$ElementType = any
+
 type possibleHasDefault<T> = T & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default?: any

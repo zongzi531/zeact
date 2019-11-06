@@ -8,7 +8,20 @@ const IdlePriority = 5
 let firstCallbackNode = null
 
 // eslint-disable-next-line prefer-const
+let currentDidTimeout = false
+
+// eslint-disable-next-line prefer-const
 let currentPriorityLevel = NormalPriority
+let currentEventStartTime = -1
+// eslint-disable-next-line prefer-const
+let currentExpirationTime = -1
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let isExecutingCallback = false
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let isHostCallbackScheduled = false
+
 
 // 个人猜测固定返回 Number
 function unstable_getCurrentPriorityLevel(): number {
@@ -33,6 +46,44 @@ if (hasNativePerformanceNow) {
   }
 }
 
+let shouldYieldToHost
+
+
+function flushImmediateWork(): void {
+  if (
+    currentEventStartTime === -1 &&
+    firstCallbackNode !== null &&
+    firstCallbackNode.priorityLevel === ImmediatePriority
+  ) {
+    isExecutingCallback = true
+    try {
+      do {
+        console.log('2019/11/6 Reading skip flushFirstCallback')
+        // flushFirstCallback()
+      } while (
+        firstCallbackNode !== null &&
+        firstCallbackNode.priorityLevel === ImmediatePriority
+      )
+    } finally {
+      isExecutingCallback = false
+      if (firstCallbackNode !== null) {
+        console.log('2019/11/6 Reading skip ensureHostCallbackIsScheduled')
+        // ensureHostCallbackIsScheduled()
+      } else {
+        isHostCallbackScheduled = false
+      }
+    }
+  }
+}
+
+function unstable_shouldYield(): boolean {
+  return (
+    !currentDidTimeout &&
+    ((firstCallbackNode !== null &&
+      firstCallbackNode.expirationTime < currentExpirationTime) ||
+      shouldYieldToHost())
+  )
+}
 
 function unstable_cancelCallback(callbackNode): void {
   const next = callbackNode.next
@@ -54,6 +105,32 @@ function unstable_cancelCallback(callbackNode): void {
   callbackNode.next = callbackNode.previous = null
 }
 
+function unstable_runWithPriority(priorityLevel, eventHandler): void {
+  switch (priorityLevel) {
+    case ImmediatePriority:
+    case UserBlockingPriority:
+    case NormalPriority:
+    case LowPriority:
+    case IdlePriority:
+      break
+    default:
+      priorityLevel = NormalPriority
+  }
+
+  const previousPriorityLevel = currentPriorityLevel
+  const previousEventStartTime = currentEventStartTime
+  currentPriorityLevel = priorityLevel
+  currentEventStartTime = getCurrentTime()
+
+  try {
+    return eventHandler()
+  } finally {
+    currentPriorityLevel = previousPriorityLevel
+    currentEventStartTime = previousEventStartTime
+
+    flushImmediateWork()
+  }
+}
 
 export {
   ImmediatePriority as unstable_ImmediatePriority,
@@ -61,13 +138,13 @@ export {
   NormalPriority as unstable_NormalPriority,
   IdlePriority as unstable_IdlePriority,
   LowPriority as unstable_LowPriority,
-  // unstable_runWithPriority,
+  unstable_runWithPriority,
   // unstable_next,
   // unstable_scheduleCallback,
   unstable_cancelCallback,
   // unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
-  // unstable_shouldYield,
+  unstable_shouldYield,
   // unstable_continueExecution,
   // unstable_pauseExecution,
   // unstable_getFirstCallbackNode,

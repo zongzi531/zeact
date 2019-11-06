@@ -7,7 +7,7 @@ import getComponentName from '@/shared/getComponentName'
 import invariant from '@/shared/invariant'
 
 import { startPhaseTimer, stopPhaseTimer } from './ZzeactDebugFiberPerf'
-import {createCursor /*, push */, pop} from './ZzeactFiberStack'
+import {createCursor, push, pop} from './ZzeactFiberStack'
 
 export const emptyContextObject = {}
 
@@ -15,6 +15,12 @@ export const emptyContextObject = {}
 let contextStackCursor: StackCursor<object> = createCursor(emptyContextObject)
 // eslint-disable-next-line prefer-const
 let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let previousContext: object = emptyContextObject
+
+function hasContextChanged(): boolean {
+  return didPerformWorkStackCursor.current
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isContextProvider(type: Function & { childContextTypes: any }): boolean {
@@ -30,6 +36,21 @@ function popContext(/* fiber: Fiber */): void {
 function popTopLevelContextObject(/* fiber: Fiber */): void {
   pop(didPerformWorkStackCursor, /* fiber */)
   pop(contextStackCursor, /* fiber */)
+}
+
+function pushTopLevelContextObject(
+  fiber: Fiber,
+  context: object,
+  didChange: boolean,
+): void {
+  invariant(
+    contextStackCursor.current === emptyContextObject,
+    'Unexpected context found on stack. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
+  )
+
+  push(contextStackCursor, context/*, fiber*/)
+  push(didPerformWorkStackCursor, didChange/*, fiber*/)
 }
 
 function processChildContext(
@@ -61,6 +82,22 @@ function processChildContext(
   }
 
   return {...parentContext, ...childContext}
+}
+
+function pushContextProvider(workInProgress: Fiber): boolean {
+  const instance = workInProgress.stateNode
+  const memoizedMergedChildContext =
+    (instance && instance.__reactInternalMemoizedMergedChildContext) ||
+    emptyContextObject
+  previousContext = contextStackCursor.current
+  push(contextStackCursor, memoizedMergedChildContext/*, workInProgress */)
+  push(
+    didPerformWorkStackCursor,
+    didPerformWorkStackCursor.current,
+    // workInProgress,
+  )
+
+  return true
 }
 
 function findCurrentUnmaskedContext(fiber: Fiber): object {
@@ -96,13 +133,13 @@ export {
   // getUnmaskedContext,
   // cacheContext,
   // getMaskedContext,
-  // hasContextChanged,
+  hasContextChanged,
   popContext,
   popTopLevelContextObject,
-  // pushTopLevelContextObject,
+  pushTopLevelContextObject,
   processChildContext,
   isContextProvider,
-  // pushContextProvider,
+  pushContextProvider,
   // invalidateContextProvider,
   findCurrentUnmaskedContext,
 }

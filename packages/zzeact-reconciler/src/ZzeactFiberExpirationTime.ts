@@ -13,6 +13,10 @@ export function msToExpirationTime(ms: number): ExpirationTime {
   return MAGIC_NUMBER_OFFSET - ((ms / UNIT_SIZE) | 0)
 }
 
+export function expirationTimeToMs(expirationTime: ExpirationTime): number {
+  return (MAGIC_NUMBER_OFFSET - expirationTime) * UNIT_SIZE
+}
+
 function ceiling(num: number, precision: number): number {
   return (((num / precision) | 0) + 1) * precision
 }

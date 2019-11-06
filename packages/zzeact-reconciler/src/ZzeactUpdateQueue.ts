@@ -1,5 +1,9 @@
 import { Fiber } from './ZzeactFiber'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
+import { NoWork } from './ZzeactFiberExpirationTime'
+
+import { Callback, ShouldCapture, DidCapture } from '@/shared/ZzeactSideEffectTags'
+
 
 export type Update<State> = {
   expirationTime: ExpirationTime
@@ -33,6 +37,9 @@ export const UpdateState = 0
 export const ReplaceState = 1
 export const ForceUpdate = 2
 export const CaptureUpdate = 3
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let hasForceUpdate = false
 
 export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
   const queue: UpdateQueue<State> = {
@@ -134,4 +141,173 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>): void 
       queue2.lastUpdate = update
     }
   }
+}
+
+function ensureWorkInProgressQueueIsAClone<State>(
+  workInProgress: Fiber,
+  queue: UpdateQueue<State>,
+): UpdateQueue<State> {
+  const current = workInProgress.alternate
+  if (current !== null) {
+    if (queue === current.updateQueue) {
+      queue = workInProgress.updateQueue = cloneUpdateQueue(queue)
+    }
+  }
+  return queue
+}
+
+function getStateFromUpdate<State>(
+  workInProgress: Fiber,
+  queue: UpdateQueue<State>,
+  update: Update<State>,
+  prevState: State,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  nextProps: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  instance: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  switch (update.tag) {
+    case ReplaceState: {
+      const payload = update.payload
+      if (typeof payload === 'function') {
+        const nextState = payload.call(instance, prevState, nextProps)
+        return nextState
+      }
+      return payload
+    }
+    case CaptureUpdate: {
+      workInProgress.effectTag =
+        (workInProgress.effectTag & ~ShouldCapture) | DidCapture
+    }
+    case UpdateState: {
+      const payload = update.payload
+      let partialState
+      if (typeof payload === 'function') {
+        partialState = payload.call(instance, prevState, nextProps)
+      } else {
+        partialState = payload
+      }
+      if (partialState === null || partialState === undefined) {
+        return prevState
+      }
+      return Object.assign({}, prevState, partialState)
+    }
+    case ForceUpdate: {
+      hasForceUpdate = true
+      return prevState
+    }
+  }
+  return prevState
+}
+
+export function processUpdateQueue<State>(
+  workInProgress: Fiber,
+  queue: UpdateQueue<State>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  props: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  instance: any,
+  renderExpirationTime: ExpirationTime,
+): void {
+  hasForceUpdate = false
+
+  queue = ensureWorkInProgressQueueIsAClone(workInProgress, queue)
+
+  let newBaseState = queue.baseState
+  let newFirstUpdate = null
+  let newExpirationTime = NoWork
+
+  let update = queue.firstUpdate
+  let resultState = newBaseState
+  while (update !== null) {
+    const updateExpirationTime = update.expirationTime
+    if (updateExpirationTime < renderExpirationTime) {
+      if (newFirstUpdate === null) {
+        newFirstUpdate = update
+        newBaseState = resultState
+      }
+      if (newExpirationTime < updateExpirationTime) {
+        newExpirationTime = updateExpirationTime
+      }
+    } else {
+      resultState = getStateFromUpdate(
+        workInProgress,
+        queue,
+        update,
+        resultState,
+        props,
+        instance,
+      )
+      const callback = update.callback
+      if (callback !== null) {
+        workInProgress.effectTag |= Callback
+        update.nextEffect = null
+        if (queue.lastEffect === null) {
+          queue.firstEffect = queue.lastEffect = update
+        } else {
+          queue.lastEffect.nextEffect = update
+          queue.lastEffect = update
+        }
+      }
+    }
+    update = update.next
+  }
+
+  let newFirstCapturedUpdate = null
+  update = queue.firstCapturedUpdate
+  while (update !== null) {
+    const updateExpirationTime = update.expirationTime
+    if (updateExpirationTime < renderExpirationTime) {
+      if (newFirstCapturedUpdate === null) {
+        newFirstCapturedUpdate = update
+        if (newFirstUpdate === null) {
+          newBaseState = resultState
+        }
+      }
+      if (newExpirationTime < updateExpirationTime) {
+        newExpirationTime = updateExpirationTime
+      }
+    } else {
+      resultState = getStateFromUpdate(
+        workInProgress,
+        queue,
+        update,
+        resultState,
+        props,
+        instance,
+      )
+      const callback = update.callback
+      if (callback !== null) {
+        workInProgress.effectTag |= Callback
+        update.nextEffect = null
+        if (queue.lastCapturedEffect === null) {
+          queue.firstCapturedEffect = queue.lastCapturedEffect = update
+        } else {
+          queue.lastCapturedEffect.nextEffect = update
+          queue.lastCapturedEffect = update
+        }
+      }
+    }
+    update = update.next
+  }
+
+  if (newFirstUpdate === null) {
+    queue.lastUpdate = null
+  }
+  if (newFirstCapturedUpdate === null) {
+    queue.lastCapturedUpdate = null
+  } else {
+    workInProgress.effectTag |= Callback
+  }
+  if (newFirstUpdate === null && newFirstCapturedUpdate === null) {
+    newBaseState = resultState
+  }
+
+  queue.baseState = newBaseState
+  queue.firstUpdate = newFirstUpdate
+  queue.firstCapturedUpdate = newFirstCapturedUpdate
+
+  workInProgress.expirationTime = newExpirationTime
+  workInProgress.memoizedState = resultState
 }

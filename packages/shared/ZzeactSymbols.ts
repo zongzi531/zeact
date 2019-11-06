@@ -17,8 +17,10 @@ export const ZZEACT_LAZY_TYPE = hasSymbol ? Symbol.for('zzeact.lazy') : 0xead4
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator
 const FAUX_ITERATOR_SYMBOL = '@@iterator'
 
+// Iterator and Function
+// Function fixed I want using '.call' function
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getIteratorFn(maybeIterable?: any): Iterator<any> | null {
+export function getIteratorFn(maybeIterable?: any): Iterator<any> & Function | null {
   if (maybeIterable === null || typeof maybeIterable !== 'object') {
     return null
   }
