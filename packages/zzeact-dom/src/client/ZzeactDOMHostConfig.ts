@@ -1,3 +1,10 @@
+import { getSelectionInformation, restoreSelection } from './ZzeactInputSelection'
+
+import {
+  isEnabled as ZzeactBrowserEventEmitterIsEnabled,
+  setEnabled as ZzeactBrowserEventEmitterSetEnabled,
+} from '../events/ZzeactBrowserEventEmitter'
+
 import {
   // unstable_scheduleCallback as scheduleDeferredCallback,
   unstable_cancelCallback as cancelDeferredCallback,
@@ -17,8 +24,8 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType'
-import { enableSuspenseServerRenderer } from '@/shared/ZzeactFeatureFlags'
 
+export type Type = string
 export type Props = {
   autoFocus?: boolean
   children?: mixed
@@ -41,8 +48,17 @@ type HostContextDev = {
 }
 type HostContextProd = string
 export type HostContext = HostContextDev | HostContextProd
+export type UpdatePayload = Array<mixed>
+export type ChildSet = void // Unused
+export type TimeoutHandle = TimeoutID
+export type NoTimeout = -1
 
 const SUSPENSE_START_DATA = '$'
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let eventsEnabled: boolean | null = null
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let selectionInformation: mixed | null = null
 
 export const scheduleTimeout =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,6 +106,19 @@ export function getChildHostContext(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const parentNamespace = ((parentHostContext as any) as HostContextProd)
   return getChildNamespace(parentNamespace, type)
+}
+
+export function prepareForCommit(): void {
+  eventsEnabled = ZzeactBrowserEventEmitterIsEnabled()
+  selectionInformation = getSelectionInformation()
+  ZzeactBrowserEventEmitterSetEnabled(false)
+}
+
+export function resetAfterCommit(): void {
+  restoreSelection(selectionInformation)
+  selectionInformation = null
+  ZzeactBrowserEventEmitterSetEnabled(eventsEnabled)
+  eventsEnabled = null
 }
 
 export const supportsHydration = true
@@ -155,8 +184,7 @@ export function getNextHydratableSibling(
     node &&
     node.nodeType !== ELEMENT_NODE &&
     node.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      node.nodeType !== COMMENT_NODE ||
+    (node.nodeType !== COMMENT_NODE ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (node as any).data !== SUSPENSE_START_DATA)
   ) {
@@ -174,8 +202,7 @@ export function getFirstHydratableChild(
     next &&
     next.nodeType !== ELEMENT_NODE &&
     next.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      next.nodeType !== COMMENT_NODE ||
+    (next.nodeType !== COMMENT_NODE ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (next as any).data !== SUSPENSE_START_DATA)
   ) {

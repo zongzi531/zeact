@@ -6,7 +6,6 @@ import { ClassComponent, HostRoot } from '@/shared/ZzeactWorkTags'
 import getComponentName from '@/shared/getComponentName'
 import invariant from '@/shared/invariant'
 
-import { startPhaseTimer, stopPhaseTimer } from './ZzeactDebugFiberPerf'
 import {createCursor, push, pop} from './ZzeactFiberStack'
 
 export const emptyContextObject = {}
@@ -46,7 +45,7 @@ function pushTopLevelContextObject(
   invariant(
     contextStackCursor.current === emptyContextObject,
     'Unexpected context found on stack. ' +
-      'This error is likely caused by a bug in React. Please file an issue.',
+      'This error is likely caused by a bug in Zzeact. Please file an issue.',
   )
 
   push(contextStackCursor, context/*, fiber*/)
@@ -66,13 +65,8 @@ function processChildContext(
     return parentContext
   }
 
-  let childContext
-  startPhaseTimer(fiber, 'getChildContext')
-  // eslint-disable-next-line prefer-const
-  childContext = instance.getChildContext()
-  stopPhaseTimer()
-  // eslint-disable-next-line prefer-const
-  for (let contextKey in childContext) {
+  const childContext = instance.getChildContext()
+  for (const contextKey in childContext) {
     invariant(
       contextKey in childContextTypes,
       '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -87,7 +81,7 @@ function processChildContext(
 function pushContextProvider(workInProgress: Fiber): boolean {
   const instance = workInProgress.stateNode
   const memoizedMergedChildContext =
-    (instance && instance.__reactInternalMemoizedMergedChildContext) ||
+    (instance && instance.__zzeactInternalMemoizedMergedChildContext) ||
     emptyContextObject
   previousContext = contextStackCursor.current
   push(contextStackCursor, memoizedMergedChildContext/*, workInProgress */)

@@ -66,7 +66,7 @@ export type HookType =
   }
 
   export function resetHooks(): void {
-    // ReactCurrentDispatcher.current = ContextOnlyDispatcher
+    // ZzeactCurrentDispatcher.current = ContextOnlyDispatcher
     // renderExpirationTime = NoWork
     // currentlyRenderingFiber = null
   

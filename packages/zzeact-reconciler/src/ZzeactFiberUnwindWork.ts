@@ -183,7 +183,7 @@ function throwException(
   //         invariant(
   //           current,
   //           'A dehydrated suspense boundary must commit before trying to render. ' +
-  //             'This is probably a bug in React.',
+  //             'This is probably a bug in Zzeact.',
   //         );
   //         current.memoizedState = retryCache;
   //       }
@@ -211,7 +211,7 @@ function throwException(
   //   // No boundary was found. Fallthrough to error mode.
   //   // TODO: Use invariant so the message is stripped in prod?
   //   value = new Error(
-  //     (getComponentName(sourceFiber.type) || 'A React component') +
+  //     (getComponentName(sourceFiber.type) || 'A Zzeact component') +
   //       ' suspended while rendering, but no fallback UI was specified.\n' +
   //       '\n' +
   //       'Add a <Suspense fallback=...> component higher in the tree to ' +

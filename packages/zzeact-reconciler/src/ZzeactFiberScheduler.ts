@@ -1,7 +1,7 @@
 import { Fiber } from './ZzeactFiber'
 import { Batch, FiberRoot } from './ZzeactFiberRoot'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
-import { Interaction } from '@/scheduler/src/Tracing'
+// import { Interaction } from '@/scheduler/src/Tracing'
 
 import {
   // unstable_next as Scheduler_next,
@@ -15,7 +15,23 @@ import {
 } from '@/scheduler'
 import ZzeactSharedInternals from '@/shared/ZzeactSharedInternals'
 import {
-  // ClassComponent,
+  NoEffect,
+  PerformedWork,
+  Placement,
+  Update,
+  Snapshot,
+  PlacementAndUpdate,
+  Deletion,
+  ContentReset,
+  Callback,
+  // DidCapture,
+  Ref,
+  Incomplete,
+  HostEffectMask,
+  Passive,
+} from '@/shared/ZzeactSideEffectTags'
+import {
+  ClassComponent,
   // HostComponent,
   // ContextProvider,
   // ForwardRef,
@@ -28,12 +44,8 @@ import {
   // DehydratedSuspenseComponent,
 } from '@/shared/ZzeactWorkTags'
 import {
-  // enableSchedulerTracing,
-  // enableProfilerTimer,
-  // enableUserTimingAPI,
   // replayFailedUnitOfWorkWithInvokeGuardedCallback,
   // warnAboutDeprecatedLifecycles,
-  // enableSuspenseServerRenderer,
 } from '@/shared/ZzeactFeatureFlags'
 import invariant from '@/shared/invariant'
 
@@ -42,8 +54,8 @@ import {
   // scheduleDeferredCallback,
   // cancelDeferredCallback,
   shouldYield,
-  // prepareForCommit,
-  // resetAfterCommit,
+  prepareForCommit,
+  resetAfterCommit,
   scheduleTimeout,
   // cancelTimeout,
   noTimeout,
@@ -60,25 +72,6 @@ import {
   findEarliestOutstandingPriorityLevel,
   // didExpireAtExpirationTime,
 } from './ZzeactFiberPendingPriority'
-import {
-  // recordEffect,
-  recordScheduleUpdate,
-  // startRequestCallbackTimer,
-  // stopRequestCallbackTimer,
-  startWorkTimer,
-  // stopWorkTimer,
-  // stopFailedWorkTimer,
-  startWorkLoopTimer,
-  stopWorkLoopTimer,
-  // startCommitTimer,
-  // stopCommitTimer,
-  // startCommitSnapshotEffectsTimer,
-  // stopCommitSnapshotEffectsTimer,
-  // startCommitHostEffectsTimer,
-  // stopCommitHostEffectsTimer,
-  // startCommitLifeCyclesTimer,
-  // stopCommitLifeCyclesTimer,
-} from './ZzeactDebugFiberPerf'
 import { createWorkInProgress /*, assignFiberPropertiesInDEV */ } from './ZzeactFiber'
 import {
   NoWork,
@@ -90,6 +83,8 @@ import {
   computeInteractiveExpiration,
 } from './ZzeactFiberExpirationTime'
 import { ConcurrentMode, /* ProfileMode, */ NoContext } from './ZzeactTypeOfMode'
+import { enqueueUpdate } from './ZzeactUpdateQueue'
+// import { createCapturedValue } from './ZzeactCapturedValue'
 import { /* popProvider, */resetContextDependences } from './ZzeactFiberNewContext'
 import { resetHooks } from './ZzeactFiberHooks'
 import {
@@ -98,6 +93,7 @@ import {
   // stopProfilerTimerIfRunningAndRecordDelta,
 } from './ZzeactProfilerTimer'
 import { beginWork } from './ZzeactFiberBeginWork'
+import { completeWork } from './ZzeactFiberCompleteWork'
 import {
   throwException,
   // unwindWork,
@@ -105,9 +101,20 @@ import {
   // createRootErrorUpdate,
   // createClassErrorUpdate,
 } from './ZzeactFiberUnwindWork'
+// import {
+//   commitBeforeMutationLifeCycles,
+//   commitResetTextContent,
+//   commitPlacement,
+//   commitDeletion,
+//   commitWork,
+//   commitLifeCycles,
+//   commitAttachRef,
+//   commitDetachRef,
+//   commitPassiveHookEffects,
+// } from './ZzeactFiberCommitWork'
 import { ContextOnlyDispatcher } from './ZzeactFiberHooks'
 
-const { ZzeactCurrentDispatcher /* , ZzeactCurrentOwner */ } = ZzeactSharedInternals
+const { ZzeactCurrentDispatcher, ZzeactCurrentOwner } = ZzeactSharedInternals
 
 // eslint-disable-next-line prefer-const
 let isWorking: boolean = false
@@ -122,12 +129,17 @@ let nextLatestAbsoluteTimeoutMs: number = -1
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let nextRenderDidError: boolean = false
 
+let nextEffect: Fiber | null = null
+
 // eslint-disable-next-line prefer-const
 let isCommitting: boolean = false
+let rootWithPendingPassiveEffects: FiberRoot | null = null
 // eslint-disable-next-line prefer-const, @typescript-eslint/no-explicit-any
 let passiveEffectCallbackHandle: any = null
 // eslint-disable-next-line prefer-const, @typescript-eslint/no-explicit-any
 let passiveEffectCallback: any = null
+
+let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let interruptedBy: Fiber | null = null
@@ -341,8 +353,6 @@ function unbatchedUpdates<A, R>(fn: (a?: A) => R, a?: A): R {
 }
 
 function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
-  recordScheduleUpdate()
-
   if (fiber.expirationTime < expirationTime) {
     fiber.expirationTime = expirationTime
   }
@@ -379,41 +389,6 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
     }
   }
 
-  if (false/* enableSchedulerTracing */) {
-    // if (root !== null) {
-    //   const interactions = __interactionsRef.current
-    //   if (interactions.size > 0) {
-    //     const pendingInteractionMap = root.pendingInteractionMap
-    //     const pendingInteractions = pendingInteractionMap.get(expirationTime)
-    //     if (pendingInteractions != null) {
-    //       interactions.forEach(interaction => {
-    //         if (!pendingInteractions.has(interaction)) {
-    //           // Update the pending async work count for previously unscheduled interaction.
-    //           interaction.__count++
-    //         }
-
-    //         pendingInteractions.add(interaction)
-    //       })
-    //     } else {
-    //       pendingInteractionMap.set(expirationTime, new Set(interactions))
-
-    //       // Update the pending async work count for the current interactions.
-    //       interactions.forEach(interaction => {
-    //         interaction.__count++
-    //       })
-    //     }
-
-    //     const subscriber = __subscriberRef.current
-    //     if (subscriber !== null) {
-    //       const threadID = computeThreadID(
-    //         expirationTime,
-    //         root.interactionThreadID,
-    //       )
-    //       subscriber.onWorkScheduled(interactions, threadID)
-    //     }
-    //   }
-    // }
-  }
   return root
 }
 
@@ -505,34 +480,104 @@ function onSuspend(
   }
 }
 
+function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
+  while (true) {
+    const current = workInProgress.alternate
+
+    const returnFiber = workInProgress.return
+    const siblingFiber = workInProgress.sibling
+
+    if ((workInProgress.effectTag & Incomplete) === NoEffect) {
+      nextUnitOfWork = workInProgress
+      {
+        console.log('2019/11/14 Reading stop at completeWork (!important):', current, workInProgress, nextRenderExpirationTime)
+        debugger
+        nextUnitOfWork = completeWork(
+          current,
+          workInProgress,
+          nextRenderExpirationTime,
+        )
+      }
+      resetChildExpirationTime(workInProgress, nextRenderExpirationTime)
+
+      if (nextUnitOfWork !== null) {
+        return nextUnitOfWork
+      }
+
+      if (
+        returnFiber !== null &&
+        (returnFiber.effectTag & Incomplete) === NoEffect
+      ) {
+        if (returnFiber.firstEffect === null) {
+          returnFiber.firstEffect = workInProgress.firstEffect
+        }
+        if (workInProgress.lastEffect !== null) {
+          if (returnFiber.lastEffect !== null) {
+            returnFiber.lastEffect.nextEffect = workInProgress.firstEffect
+          }
+          returnFiber.lastEffect = workInProgress.lastEffect
+        }
+
+        const effectTag = workInProgress.effectTag
+        if (effectTag > PerformedWork) {
+          if (returnFiber.lastEffect !== null) {
+            returnFiber.lastEffect.nextEffect = workInProgress
+          } else {
+            returnFiber.firstEffect = workInProgress
+          }
+          returnFiber.lastEffect = workInProgress
+        }
+      }
+
+      if (siblingFiber !== null) {
+        return siblingFiber
+      } else if (returnFiber !== null) {
+        workInProgress = returnFiber
+        continue
+      } else {
+        return null
+      }
+    } else {
+      const next = unwindWork(workInProgress, nextRenderExpirationTime)
+
+      if (next !== null) {
+        next.effectTag &= HostEffectMask
+        return next
+      }
+
+      if (returnFiber !== null) {
+        returnFiber.firstEffect = returnFiber.lastEffect = null
+        returnFiber.effectTag |= Incomplete
+      }
+
+      if (siblingFiber !== null) {
+        return siblingFiber
+      } else if (returnFiber !== null) {
+        workInProgress = returnFiber
+        continue
+      } else {
+        return null
+      }
+    }
+  }
+
+  return null
+}
+
 function performUnitOfWork(workInProgress: Fiber): Fiber | null {
   const current = workInProgress.alternate
 
-  startWorkTimer(workInProgress)
-
   let next
-  if (false/* enableProfilerTimer */) {
-    // if (workInProgress.mode & ProfileMode) {
-    //   startProfilerTimer(workInProgress)
-    // }
-
-    // next = beginWork(current, workInProgress, nextRenderExpirationTime)
-    // workInProgress.memoizedProps = workInProgress.pendingProps
-
-    // if (workInProgress.mode & ProfileMode) {
-    //   // Record the render duration assuming we didn't bailout (or error).
-    //   stopProfilerTimerIfRunningAndRecordDelta(workInProgress, true)
-    // }
-  } else {
+  {
     next = beginWork(current, workInProgress, nextRenderExpirationTime)
     workInProgress.memoizedProps = workInProgress.pendingProps
   }
 
-  // if (next === null) {
-  //   next = completeUnitOfWork(workInProgress)
-  // }
+  if (next === null) {
+    next = completeUnitOfWork(workInProgress)
+  }
 
-  // ZzeactCurrentOwner.current = null
+  ZzeactCurrentOwner.current = null
 
   return next
 }
@@ -562,7 +607,7 @@ function onUncaughtError(error: mixed): void {
   invariant(
     nextFlushedRoot !== null,
     'Should be working on a root. This error is likely caused by a bug in ' +
-      'React. Please file an issue.',
+      'Zzeact. Please file an issue.',
   )
   nextFlushedRoot.expirationTime = NoWork
   if (!hasUnhandledError) {
@@ -610,52 +655,10 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       /* nextRenderExpirationTime, */
     )
     root.pendingCommitExpirationTime = NoWork
-
-    if (false/* enableSchedulerTracing */) {
-      // const interactions: Set<Interaction> = new Set()
-      // root.pendingInteractionMap.forEach(
-      //   (scheduledInteractions, scheduledExpirationTime) => {
-      //     if (scheduledExpirationTime >= expirationTime) {
-      //       scheduledInteractions.forEach(interaction =>
-      //         interactions.add(interaction),
-      //       )
-      //     }
-      //   },
-      // )
-
-      // root.memoizedInteractions = interactions
-
-      // if (interactions.size > 0) {
-      //   const subscriber = __subscriberRef.current
-      //   if (subscriber !== null) {
-      //     const threadID = computeThreadID(
-      //       expirationTime,
-      //       root.interactionThreadID,
-      //     )
-      //     try {
-      //       subscriber.onWorkStarted(interactions, threadID)
-      //     } catch (error) {
-      //       if (!hasUnhandledError) {
-      //         hasUnhandledError = true
-      //         unhandledError = error
-      //       }
-      //     }
-      //   }
-      // }
-    }
-  }
-
-  // eslint-disable-next-line prefer-const, @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-  let prevInteractions: Set<Interaction> = (null as any)
-  if (false/* enableSchedulerTracing */) {
-    // prevInteractions = __interactionsRef.current
-    // __interactionsRef.current = root.memoizedInteractions
   }
 
   // eslint-disable-next-line prefer-const, @typescript-eslint/no-unused-vars
   let didFatal = false
-
-  startWorkLoopTimer(nextUnitOfWork)
 
   do {
     try {
@@ -668,9 +671,6 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
         didFatal = true
         onUncaughtError(thrownValue)
       } else {
-        if (false/* enableProfilerTimer && nextUnitOfWork.mode & ProfileMode */) {
-          // stopProfilerTimerIfRunningAndRecordDelta(nextUnitOfWork, true)
-        }
         invariant(
           nextUnitOfWork !== null,
           'Failed to replay rendering after an error. This ' +
@@ -700,18 +700,12 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     break
   } while (true)
 
-  if (false/* enableSchedulerTracing */) {
-    // __interactionsRef.current = prevInteractions
-  }
-
   isWorking = false
   ZzeactCurrentDispatcher.current = previousDispatcher
   resetContextDependences()
   resetHooks()
 
   if (didFatal) {
-    const didCompleteRoot = false
-    stopWorkLoopTimer(interruptedBy, didCompleteRoot)
     interruptedBy = null
     nextRoot = null
     onFatal(root)
@@ -719,15 +713,11 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   }
 
   if (nextUnitOfWork !== null) {
-    const didCompleteRoot = false
-    stopWorkLoopTimer(interruptedBy, didCompleteRoot)
     interruptedBy = null
     onYield(root)
     return
   }
 
-  const didCompleteRoot = true
-  stopWorkLoopTimer(interruptedBy, didCompleteRoot)
   const rootWorkInProgress = root.current.alternate
   invariant(
     rootWorkInProgress !== null,
@@ -800,6 +790,331 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   onComplete(root, rootWorkInProgress, expirationTime)
 }
 
+function commitAllHostEffects(): void {
+  while (nextEffect !== null) {
+
+    const effectTag = nextEffect.effectTag
+
+    if (effectTag & ContentReset) {
+      commitResetTextContent(nextEffect)
+    }
+
+    if (effectTag & Ref) {
+      const current = nextEffect.alternate
+      if (current !== null) {
+        commitDetachRef(current)
+      }
+    }
+
+    const primaryEffectTag = effectTag & (Placement | Update | Deletion)
+    switch (primaryEffectTag) {
+      case Placement: {
+        commitPlacement(nextEffect)
+        nextEffect.effectTag &= ~Placement
+        break
+      }
+      case PlacementAndUpdate: {
+        commitPlacement(nextEffect)
+        nextEffect.effectTag &= ~Placement
+        const current = nextEffect.alternate
+        commitWork(current, nextEffect)
+        break
+      }
+      case Update: {
+        const current = nextEffect.alternate
+        commitWork(current, nextEffect)
+        break
+      }
+      case Deletion: {
+        commitDeletion(nextEffect)
+        break
+      }
+    }
+    nextEffect = nextEffect.nextEffect
+  }
+}
+
+function commitBeforeMutationLifecycles(): void {
+  while (nextEffect !== null) {
+    const effectTag = nextEffect.effectTag
+    if (effectTag & Snapshot) {
+      const current = nextEffect.alternate
+      commitBeforeMutationLifeCycles(current, nextEffect)
+    }
+
+    nextEffect = nextEffect.nextEffect
+  }
+}
+
+function isAlreadyFailedLegacyErrorBoundary(instance: mixed): boolean {
+  return (
+    legacyErrorBoundariesThatAlreadyFailed !== null &&
+    legacyErrorBoundariesThatAlreadyFailed.has(instance)
+  )
+}
+
+
+function captureCommitPhaseError(sourceFiber: Fiber, value: mixed): void {
+  const expirationTime = Sync
+  let fiber = sourceFiber.return
+  while (fiber !== null) {
+    switch (fiber.tag) {
+      case ClassComponent:
+        const ctor = fiber.type
+        const instance = fiber.stateNode
+        if (
+          typeof ctor.getDerivedStateFromError === 'function' ||
+          (typeof instance.componentDidCatch === 'function' &&
+            !isAlreadyFailedLegacyErrorBoundary(instance))
+        ) {
+          const errorInfo = createCapturedValue(value, sourceFiber)
+          const update = createClassErrorUpdate(
+            fiber,
+            errorInfo,
+            expirationTime,
+          )
+          enqueueUpdate(fiber, update)
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          scheduleWork(fiber, expirationTime)
+          return
+        }
+        break
+      case HostRoot: {
+        const errorInfo = createCapturedValue(value, sourceFiber)
+        const update = createRootErrorUpdate(fiber, errorInfo, expirationTime)
+        enqueueUpdate(fiber, update)
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        scheduleWork(fiber, expirationTime)
+        return
+      }
+    }
+    fiber = fiber.return
+  }
+
+  if (sourceFiber.tag === HostRoot) {
+    const rootFiber = sourceFiber
+    const errorInfo = createCapturedValue(value, rootFiber)
+    const update = createRootErrorUpdate(rootFiber, errorInfo, expirationTime)
+    enqueueUpdate(rootFiber, update)
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    scheduleWork(rootFiber, expirationTime)
+  }
+}
+
+function commitAllLifeCycles(
+  finishedRoot: FiberRoot,
+  committedExpirationTime: ExpirationTime,
+): void {
+  while (nextEffect !== null) {
+    const effectTag = nextEffect.effectTag
+
+    if (effectTag & (Update | Callback)) {
+      const current = nextEffect.alternate
+      commitLifeCycles(
+        finishedRoot,
+        current,
+        nextEffect,
+        committedExpirationTime,
+      )
+    }
+
+    if (effectTag & Ref) {
+      commitAttachRef(nextEffect)
+    }
+
+    if (effectTag & Passive) {
+      rootWithPendingPassiveEffects = finishedRoot
+    }
+
+    nextEffect = nextEffect.nextEffect
+  }
+}
+
+function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
+  rootWithPendingPassiveEffects = null
+  passiveEffectCallbackHandle = null
+  passiveEffectCallback = null
+
+  const previousIsRendering = isRendering
+  isRendering = true
+
+  let effect = firstEffect
+  do {
+    if (effect.effectTag & Passive) {
+      let didError = false
+      let error
+      {
+        try {
+          commitPassiveHookEffects(effect)
+        } catch (e) {
+          didError = true
+          error = e
+        }
+      }
+      if (didError) {
+        captureCommitPhaseError(effect, error)
+      }
+    }
+    effect = effect.nextEffect
+  } while (effect !== null)
+
+  isRendering = previousIsRendering
+
+  const rootExpirationTime = root.expirationTime
+  if (rootExpirationTime !== NoWork) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    requestWork(root, rootExpirationTime)
+  }
+  if (!isBatchingUpdates && !isRendering) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    performSyncWork()
+  }
+}
+
+function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
+  isWorking = true
+  isCommitting = true
+  invariant(
+    root.current !== finishedWork,
+    'Cannot commit the same tree as before. This is probably a bug ' +
+      'related to the return field. This error is likely caused by a bug ' +
+      'in Zzeact. Please file an issue.',
+  )
+  const committedExpirationTime = root.pendingCommitExpirationTime
+  invariant(
+    committedExpirationTime !== NoWork,
+    'Cannot commit an incomplete root. This error is likely caused by a ' +
+      'bug in Zzeact. Please file an issue.',
+  )
+  root.pendingCommitExpirationTime = NoWork
+
+  const updateExpirationTimeBeforeCommit = finishedWork.expirationTime
+  const childExpirationTimeBeforeCommit = finishedWork.childExpirationTime
+  const earliestRemainingTimeBeforeCommit =
+    childExpirationTimeBeforeCommit > updateExpirationTimeBeforeCommit
+      ? childExpirationTimeBeforeCommit
+      : updateExpirationTimeBeforeCommit
+  markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit)
+
+  ZzeactCurrentOwner.current = null
+
+  let firstEffect
+  if (finishedWork.effectTag > PerformedWork) {
+    if (finishedWork.lastEffect !== null) {
+      finishedWork.lastEffect.nextEffect = finishedWork
+      firstEffect = finishedWork.firstEffect
+    } else {
+      firstEffect = finishedWork
+    }
+  } else {
+    firstEffect = finishedWork.firstEffect
+  }
+
+  prepareForCommit(/* root.containerInfo */)
+
+  nextEffect = firstEffect
+  while (nextEffect !== null) {
+    let didError = false
+    let error
+    {
+      try {
+        commitBeforeMutationLifecycles()
+      } catch (e) {
+        didError = true
+        error = e
+      }
+    }
+    if (didError) {
+      invariant(
+        nextEffect !== null,
+        'Should have next effect. This error is likely caused by a bug ' +
+          'in Zzeact. Please file an issue.',
+      )
+      captureCommitPhaseError(nextEffect, error)
+      if (nextEffect !== null) {
+        nextEffect = nextEffect.nextEffect
+      }
+    }
+  }
+  nextEffect = firstEffect
+  while (nextEffect !== null) {
+    let didError = false
+    let error
+    {
+      try {
+        commitAllHostEffects()
+      } catch (e) {
+        didError = true
+        error = e
+      }
+    }
+    if (didError) {
+      invariant(
+        nextEffect !== null,
+        'Should have next effect. This error is likely caused by a bug ' +
+          'in Zzeact. Please file an issue.',
+      )
+      captureCommitPhaseError(nextEffect, error)
+      if (nextEffect !== null) {
+        nextEffect = nextEffect.nextEffect
+      }
+    }
+  }
+  resetAfterCommit(/* root.containerInfo */)
+
+  root.current = finishedWork
+
+  nextEffect = firstEffect
+  while (nextEffect !== null) {
+    let didError = false
+    let error
+    {
+      try {
+        commitAllLifeCycles(root, committedExpirationTime)
+      } catch (e) {
+        didError = true
+        error = e
+      }
+    }
+    if (didError) {
+      invariant(
+        nextEffect !== null,
+        'Should have next effect. This error is likely caused by a bug ' +
+          'in Zzeact. Please file an issue.',
+      )
+      captureCommitPhaseError(nextEffect, error)
+      if (nextEffect !== null) {
+        nextEffect = nextEffect.nextEffect
+      }
+    }
+  }
+
+  if (firstEffect !== null && rootWithPendingPassiveEffects !== null) {
+    const callback = commitPassiveEffects.bind(null, root, firstEffect)
+    passiveEffectCallbackHandle = runWithPriority(NormalPriority, () => {
+      return schedulePassiveEffects(callback)
+    })
+    passiveEffectCallback = callback
+  }
+
+  isCommitting = false
+  isWorking = false
+  stopCommitLifeCyclesTimer()
+  stopCommitTimer()
+  onCommitRoot(finishedWork.stateNode)
+
+  const updateExpirationTimeAfterCommit = finishedWork.expirationTime
+  const childExpirationTimeAfterCommit = finishedWork.childExpirationTime
+  const earliestRemainingTimeAfterCommit =
+    childExpirationTimeAfterCommit > updateExpirationTimeAfterCommit
+      ? childExpirationTimeAfterCommit
+      : updateExpirationTimeAfterCommit
+  if (earliestRemainingTimeAfterCommit === NoWork) {
+    legacyErrorBoundariesThatAlreadyFailed = null
+  }
+  onCommit(root, earliestRemainingTimeAfterCommit)
+}
+
 function completeRoot(
   root: FiberRoot,
   finishedWork: Fiber,
@@ -828,9 +1143,7 @@ function completeRoot(
     nestedUpdateCount = 0
   }
   runWithPriority(ImmediatePriority, () => {
-    console.log('2019/11/6 Reading stop at commitRoot (!important):', root, finishedWork)
-    debugger
-    // commitRoot(root, finishedWork)
+    commitRoot(root, finishedWork)
   })
 }
 
@@ -905,12 +1218,6 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean): void
   if (isYieldy) {
     recomputeCurrentRendererTime()
     currentSchedulerTime = currentRendererTime
-
-    if (false/* enableUserTimingAPI */) {
-      // const didExpire = nextFlushedExpirationTime > currentRendererTime
-      // const timeout = expirationTimeToMs(nextFlushedExpirationTime)
-      // stopRequestCallbackTimer(didExpire, timeout)
-    }
 
     while (
       nextFlushedRoot !== null &&
@@ -1021,14 +1328,14 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime): void {
 export {
   requestCurrentTime,
   computeExpirationForFiber,
-  // captureCommitPhaseError,
+  captureCommitPhaseError,
   onUncaughtError,
   // renderDidSuspend,
   // renderDidError,
   // pingSuspendedRoot,
   // retryTimedOutBoundary,
   // markLegacyErrorBoundaryAsFailed,
-  // isAlreadyFailedLegacyErrorBoundary,
+  isAlreadyFailedLegacyErrorBoundary,
   scheduleWork,
   requestWork,
   flushRoot,

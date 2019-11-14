@@ -10,8 +10,6 @@ import { HookType } from './ZzeactFiberHooks'
 
 import invariant from '@/shared/invariant'
 
-// import { enableProfilerTimer } from '@/shared/ZzeactFeatureFlags'
-
 // import { isDevToolsPresent } from './ZzeactFiberDevToolsHook'
 
 import { NoEffect } from '@/shared/ZzeactSideEffectTags'
@@ -136,19 +134,6 @@ function FiberNode(
   this.childExpirationTime = NoWork
 
   this.alternate = null
-
-  // if (enableProfilerTimer) {
-
-  //   this.actualDuration = Number.NaN
-  //   this.actualStartTime = Number.NaN
-  //   this.selfBaseDuration = Number.NaN
-  //   this.treeBaseDuration = Number.NaN
-
-  //   this.actualDuration = 0
-  //   this.actualStartTime = -1
-  //   this.selfBaseDuration = 0
-  //   this.treeBaseDuration = 0
-  // }
 }
 
 const createFiber = function(
@@ -161,12 +146,7 @@ const createFiber = function(
 }
 
 export function createHostRootFiber(isConcurrent: boolean): Fiber {
-  // eslint-disable-next-line prefer-const
-  let mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext
-
-  // if (enableProfilerTimer && isDevToolsPresent) {
-  //   mode |= ProfileMode
-  // }
+  const mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext
 
   return createFiber(HostRoot, null, null, mode)
 }
@@ -197,11 +177,6 @@ export function createWorkInProgress(
     workInProgress.nextEffect = null
     workInProgress.firstEffect = null
     workInProgress.lastEffect = null
-
-    // if (enableProfilerTimer) {
-    //   workInProgress.actualDuration = 0
-    //   workInProgress.actualStartTime = -1
-    // }
   }
 
   workInProgress.childExpirationTime = current.childExpirationTime
@@ -217,17 +192,12 @@ export function createWorkInProgress(
   workInProgress.index = current.index
   workInProgress.ref = current.ref
 
-  // if (enableProfilerTimer) {
-  //   workInProgress.selfBaseDuration = current.selfBaseDuration
-  //   workInProgress.treeBaseDuration = current.treeBaseDuration
-  // }
-
   return workInProgress
 }
 
 function shouldConstruct(Component: Function): boolean {
   const prototype = Component.prototype
-  return !!(prototype && prototype.isReactComponent)
+  return !!(prototype && prototype.isZzeactComponent)
 }
 
 export function createFiberFromFragment(

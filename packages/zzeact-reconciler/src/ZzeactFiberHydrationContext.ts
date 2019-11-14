@@ -3,7 +3,7 @@ import {
   Instance,
   TextInstance,
   HydratableInstance,
-  SuspenseInstance,
+  // SuspenseInstance,
   // Container,
   // HostContext,
 } from '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ReactFiberHostConfig */
@@ -13,7 +13,7 @@ import {
   HostText,
   // HostRoot,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
+  // DehydratedSuspenseComponent,
 } from '@/shared/ZzeactWorkTags'
 import { Deletion, Placement } from '@/shared/ZzeactSideEffectTags'
 
@@ -23,7 +23,7 @@ import {
   supportsHydration,
   canHydrateInstance,
   canHydrateTextInstance,
-  canHydrateSuspenseInstance,
+  // canHydrateSuspenseInstance,
   getNextHydratableSibling,
   getFirstHydratableChild,
   // hydrateInstance,
@@ -40,7 +40,6 @@ import {
   // didNotFindHydratableTextInstance,
   // didNotFindHydratableSuspenseInstance,
 } from '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ReactFiberHostConfig */
-import { enableSuspenseServerRenderer } from '@/shared/ZzeactFeatureFlags'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let hydrationParentFiber: null | Fiber = null
@@ -114,14 +113,6 @@ function tryHydrate(fiber, nextInstance): boolean {
       return false
     }
     case SuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        const suspenseInstance = canHydrateSuspenseInstance(nextInstance)
-        if (suspenseInstance !== null) {
-          fiber.tag = DehydratedSuspenseComponent
-          fiber.stateNode = (suspenseInstance as SuspenseInstance)
-          return true
-        }
-      }
       return false
     }
     default:

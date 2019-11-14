@@ -30,19 +30,16 @@ import {
   // PerformedWork,
   Placement,
   ContentReset,
-  DidCapture,
-  Update,
+  // DidCapture,
+  // Update,
   Ref,
   // Deletion,
 } from '@/shared/ZzeactSideEffectTags'
 import {
   // debugRenderPhaseSideEffects,
   // debugRenderPhaseSideEffectsForStrictMode,
-  enableProfilerTimer,
-  enableSuspenseServerRenderer,
 } from '@/shared/ZzeactFeatureFlags'
 import invariant from '@/shared/invariant'
-import { /* startWorkTimer, */cancelWorkTimer } from './ZzeactDebugFiberPerf'
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -68,7 +65,7 @@ import {
   // prepareToReadContext,
   // calculateChangedBits,
 } from './ZzeactFiberNewContext'
-import { stopProfilerTimerIfRunning } from './ZzeactProfilerTimer'
+// import { stopProfilerTimerIfRunning } from './ZzeactProfilerTimer'
 import {
   // getMaskedContext,
   // getUnmaskedContext,
@@ -107,14 +104,8 @@ function bailoutOnAlreadyFinishedWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  cancelWorkTimer(workInProgress)
-
   if (current !== null) {
     workInProgress.contextDependencies = current.contextDependencies
-  }
-
-  if (enableProfilerTimer) {
-    stopProfilerTimerIfRunning(/* workInProgress */)
   }
 
   const childExpirationTime = workInProgress.childExpirationTime
@@ -166,7 +157,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime): Fiber {
   invariant(
     updateQueue !== null,
     'If the root does not have an updateQueue, we should have already ' +
-      'bailed out. This error is likely caused by a bug in React. Please ' +
+      'bailed out. This error is likely caused by a bug in Zzeact. Please ' +
       'file an issue.',
   )
   const nextProps = workInProgress.pendingProps
@@ -297,9 +288,6 @@ function beginWork(
           break
         }
         case Profiler:
-          if (enableProfilerTimer) {
-            workInProgress.effectTag |= Update
-          }
           break
         case SuspenseComponent: {
           const state: SuspenseState | null = workInProgress.memoizedState
@@ -333,12 +321,7 @@ function beginWork(
           }
           break
         }
-        case DehydratedSuspenseComponent: {
-          if (enableSuspenseServerRenderer) {
-            workInProgress.effectTag |= DidCapture
-            break
-          }
-        }
+        case DehydratedSuspenseComponent: {}
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -493,20 +476,13 @@ function beginWork(
       )
     }
     case DehydratedSuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        return updateDehydratedSuspenseComponent(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        )
-      }
       break
     }
   }
   invariant(
     false,
     'Unknown unit of work tag. This error is likely caused by a bug in ' +
-      'React. Please file an issue.',
+      'Zzeact. Please file an issue.',
   )
 }
 

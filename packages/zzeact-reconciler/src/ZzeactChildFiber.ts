@@ -53,14 +53,14 @@ function coerceRef(
         invariant(
           ownerFiber.tag === ClassComponent,
           'Function components cannot have refs. ' +
-            'Did you mean to use React.forwardRef()?',
+            'Did you mean to use Zzeact.forwardRef()?',
         )
         inst = ownerFiber.stateNode
       }
       invariant(
         inst,
         'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
+          'bug in Zzeact. Please file an issue.',
         mixedRef,
       )
       const stringRef = '' + mixedRef
@@ -89,7 +89,7 @@ function coerceRef(
     } else {
       invariant(
         typeof mixedRef === 'string',
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+        'Expected ref to be a function, a string, an object returned by Zzeact.createRef(), or null.',
       )
       invariant(
         element._owner,
@@ -97,7 +97,7 @@ function coerceRef(
           ' the following reasons:\n' +
           '1. You may be adding a ref to a function component\n' +
           '2. You may be adding a ref to a component that was not created inside a component\'s render method\n' +
-          '3. You have multiple copies of React loaded\n' +
+          '3. You have multiple copies of Zzeact loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.',
         mixedRef,
       )
@@ -111,7 +111,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: object): void {
     const addendum = ''
     invariant(
       false,
-      'Objects are not valid as a React child (found: %s).%s',
+      'Objects are not valid as a Zzeact child (found: %s).%s',
       Object.prototype.toString.call(newChild) === '[object Object]'
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : newChild,
@@ -632,7 +632,7 @@ function ChildReconciler(shouldTrackSideEffects): Function {
     invariant(
       typeof iteratorFn === 'function',
       'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
+        'Zzeact. Please file an issue.',
     )
 
     const newChildren = iteratorFn.call(newChildrenIterable)

@@ -34,3 +34,9 @@ type possibleHasDefault<T> = T & {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type mixed = any
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SyntheticEvent = any
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TimeoutID = any
