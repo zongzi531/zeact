@@ -1,3 +1,19 @@
+import { precacheFiberNode, updateFiberProps } from './ZzeactDOMComponentTree'
+import {
+  // createElement,
+  // createTextNode,
+  // setInitialProperties,
+  // diffProperties,
+  // updateProperties,
+  diffHydratedProperties,
+  diffHydratedText,
+  // trapClickOnNonInteractiveElement,
+  // warnForUnmatchedText,
+  // warnForDeletedHydratableElement,
+  // warnForDeletedHydratableText,
+  // warnForInsertedHydratedElement,
+  // warnForInsertedHydratedText,
+} from './ZzeactDOMComponent'
 import { getSelectionInformation, restoreSelection } from './ZzeactInputSelection'
 
 import {
@@ -54,6 +70,7 @@ export type TimeoutHandle = TimeoutID
 export type NoTimeout = -1
 
 const SUSPENSE_START_DATA = '$'
+const SUSPENSE_END_DATA = '/$'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let eventsEnabled: boolean | null = null
@@ -121,8 +138,6 @@ export function resetAfterCommit(): void {
   eventsEnabled = null
 }
 
-export const supportsHydration = true
-
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -139,6 +154,8 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
   return !!props.hidden
 }
+
+export const supportsHydration = true
 
 export function canHydrateInstance(
   instance: HydratableInstance,
@@ -211,3 +228,69 @@ export function getFirstHydratableChild(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (next as any)
 }
+
+export function hydrateInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  internalInstanceHandle: object,
+): null | Array<mixed> {
+  precacheFiberNode(internalInstanceHandle, instance)
+  updateFiberProps(instance, props)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parentNamespace = ((hostContext as any) as HostContextProd)
+  return diffHydratedProperties(
+    instance,
+    type,
+    props,
+    parentNamespace,
+    rootContainerInstance,
+  )
+}
+
+export function hydrateTextInstance(
+  textInstance: TextInstance,
+  text: string,
+  internalInstanceHandle: object,
+): boolean {
+  precacheFiberNode(internalInstanceHandle, textInstance)
+  return diffHydratedText(textInstance, text)
+}
+
+export function getNextHydratableInstanceAfterSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): null | HydratableInstance {
+  let node = suspenseInstance.nextSibling
+  let depth = 0
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = ((node as any).data as string)
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return getNextHydratableSibling((node as any))
+        } else {
+          depth--
+        }
+      } else if (data === SUSPENSE_START_DATA) {
+        depth++
+      }
+    }
+    node = node.nextSibling
+  }
+  return null
+}
+
+export function didNotMatchHydratedContainerTextInstance(): void { return }
+export function didNotMatchHydratedTextInstance(): void { return }
+export function didNotHydrateContainerInstance(): void { return }
+export function didNotHydrateInstance(): void { return }
+export function didNotFindHydratableContainerInstance(): void { return }
+export function didNotFindHydratableContainerTextInstance(): void { return }
+export function didNotFindHydratableContainerSuspenseInstance(): void { return }
+export function didNotFindHydratableInstance(): void { return }
+export function didNotFindHydratableTextInstance(): void { return }
+export function didNotFindHydratableSuspenseInstance(): void { return }
