@@ -6,9 +6,7 @@ import {
   Type,
   Props,
   Container,
-  ChildSet,
 } from '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ReactFiberHostConfig */
-import { SuspenseState } from './ZzeactFiberSuspenseComponent'
 
 import {
   IndeterminateComponent,
@@ -44,18 +42,10 @@ import invariant from '@/shared/invariant'
 import {
   createInstance,
   createTextInstance,
-  createHiddenTextInstance,
   appendInitialChild,
   finalizeInitialChildren,
   prepareUpdate,
   supportsMutation,
-  supportsPersistence,
-  cloneInstance,
-  cloneHiddenInstance,
-  cloneUnhiddenInstance,
-  createContainerChildSet,
-  appendChildToContainerChildSet,
-  finalizeContainerChildren,
 } from '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ReactFiberHostConfig */
 import {
   getRootHostContainer,
@@ -136,14 +126,12 @@ if (supportsMutation) {
     }
 
     const instance: Instance = workInProgress.stateNode
-    const currentHostContext = getHostContext()
     const updatePayload = prepareUpdate(
       instance,
       type,
       oldProps,
       newProps,
       rootContainerInstance,
-      currentHostContext,
     )
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     workInProgress.updateQueue = (updatePayload as any)
@@ -160,298 +148,6 @@ if (supportsMutation) {
     if (oldText !== newText) {
       markUpdate(workInProgress)
     }
-  }
-} else if (supportsPersistence) {
-  appendAllChildren = function(
-    parent: Instance,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ): void {
-    let node = workInProgress.child
-    while (node !== null) {
-      branches: if (node.tag === HostComponent) {
-        let instance = node.stateNode
-        if (needsVisibilityToggle) {
-          const props = node.memoizedProps
-          const type = node.type
-          if (isHidden) {
-            instance = cloneHiddenInstance(instance, type, props, node)
-          } else {
-            instance = cloneUnhiddenInstance(instance, type, props, node)
-          }
-          node.stateNode = instance
-        }
-        appendInitialChild(parent, instance)
-      } else if (node.tag === HostText) {
-        let instance = node.stateNode
-        if (needsVisibilityToggle) {
-          const text = node.memoizedProps
-          const rootContainerInstance = getRootHostContainer()
-          const currentHostContext = getHostContext()
-          if (isHidden) {
-            instance = createHiddenTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            )
-          } else {
-            instance = createTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            )
-          }
-          node.stateNode = instance
-        }
-        appendInitialChild(parent, instance)
-      } else if (node.tag === HostPortal) {
-      } else if (node.tag === SuspenseComponent) {
-        const current = node.alternate
-        if (current !== null) {
-          const oldState: SuspenseState = current.memoizedState
-          const newState: SuspenseState = node.memoizedState
-          const oldIsHidden = oldState !== null
-          const newIsHidden = newState !== null
-          if (oldIsHidden !== newIsHidden) {
-            const primaryChildParent = newIsHidden ? node.child : node
-            if (primaryChildParent !== null) {
-              appendAllChildren(parent, primaryChildParent, true, newIsHidden)
-            }
-            break branches
-          }
-        }
-        if (node.child !== null) {
-          node.child.return = node
-          node = node.child
-          continue
-        }
-      } else if (node.child !== null) {
-        node.child.return = node
-        node = node.child
-        continue
-      }
-      node = (node as Fiber)
-      if (node === workInProgress) {
-        return
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === workInProgress) {
-          return
-        }
-        node = node.return
-      }
-      node.sibling.return = node.return
-      node = node.sibling
-    }
-  }
-
-  const appendAllChildrenToContainer = function(
-    containerChildSet: ChildSet,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ): void {
-    let node = workInProgress.child
-    while (node !== null) {
-      branches: if (node.tag === HostComponent) {
-        let instance = node.stateNode
-        if (needsVisibilityToggle) {
-          const props = node.memoizedProps
-          const type = node.type
-          if (isHidden) {
-            instance = cloneHiddenInstance(instance, type, props, node)
-          } else {
-            instance = cloneUnhiddenInstance(instance, type, props, node)
-          }
-          node.stateNode = instance
-        }
-        appendChildToContainerChildSet(containerChildSet, instance)
-      } else if (node.tag === HostText) {
-        let instance = node.stateNode
-        if (needsVisibilityToggle) {
-          const text = node.memoizedProps
-          const rootContainerInstance = getRootHostContainer()
-          const currentHostContext = getHostContext()
-          if (isHidden) {
-            instance = createHiddenTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            )
-          } else {
-            instance = createTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            )
-          }
-          node.stateNode = instance
-        }
-        appendChildToContainerChildSet(containerChildSet, instance)
-      } else if (node.tag === HostPortal) {
-      } else if (node.tag === SuspenseComponent) {
-        const current = node.alternate
-        if (current !== null) {
-          const oldState: SuspenseState = current.memoizedState
-          const newState: SuspenseState = node.memoizedState
-          const oldIsHidden = oldState !== null
-          const newIsHidden = newState !== null
-          if (oldIsHidden !== newIsHidden) {
-            const primaryChildParent = newIsHidden ? node.child : node
-            if (primaryChildParent !== null) {
-              appendAllChildrenToContainer(
-                containerChildSet,
-                primaryChildParent,
-                true,
-                newIsHidden,
-              )
-            }
-            break branches
-          }
-        }
-        if (node.child !== null) {
-          node.child.return = node
-          node = node.child
-          continue
-        }
-      } else if (node.child !== null) {
-        node.child.return = node
-        node = node.child
-        continue
-      }
-      node = (node as Fiber)
-      if (node === workInProgress) {
-        return
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === workInProgress) {
-          return
-        }
-        node = node.return
-      }
-      node.sibling.return = node.return
-      node = node.sibling
-    }
-  }
-  updateHostContainer = function(workInProgress: Fiber): void {
-    const portalOrRoot: {
-      containerInfo: Container
-      pendingChildren: ChildSet
-    } =
-      workInProgress.stateNode
-    const childrenUnchanged = workInProgress.firstEffect === null
-    if (childrenUnchanged) {
-    } else {
-      const container = portalOrRoot.containerInfo
-      const newChildSet = createContainerChildSet(container)
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false)
-      portalOrRoot.pendingChildren = newChildSet
-      markUpdate(workInProgress)
-      finalizeContainerChildren(container, newChildSet)
-    }
-  }
-  updateHostComponent = function(
-    current: Fiber,
-    workInProgress: Fiber,
-    type: Type,
-    newProps: Props,
-    rootContainerInstance: Container,
-  ): void {
-    const currentInstance = current.stateNode
-    const oldProps = current.memoizedProps
-    const childrenUnchanged = workInProgress.firstEffect === null
-    if (childrenUnchanged && oldProps === newProps) {
-      workInProgress.stateNode = currentInstance
-      return
-    }
-    const recyclableInstance: Instance = workInProgress.stateNode
-    const currentHostContext = getHostContext()
-    let updatePayload = null
-    if (oldProps !== newProps) {
-      updatePayload = prepareUpdate(
-        recyclableInstance,
-        type,
-        oldProps,
-        newProps,
-        rootContainerInstance,
-        currentHostContext,
-      )
-    }
-    if (childrenUnchanged && updatePayload === null) {
-      workInProgress.stateNode = currentInstance
-      return
-    }
-    const newInstance = cloneInstance(
-      currentInstance,
-      updatePayload,
-      type,
-      oldProps,
-      newProps,
-      workInProgress,
-      childrenUnchanged,
-      recyclableInstance,
-    )
-    if (
-      finalizeInitialChildren(
-        newInstance,
-        type,
-        newProps,
-        rootContainerInstance,
-        currentHostContext,
-      )
-    ) {
-      markUpdate(workInProgress)
-    }
-    workInProgress.stateNode = newInstance
-    if (childrenUnchanged) {
-      markUpdate(workInProgress)
-    } else {
-      appendAllChildren(newInstance, workInProgress, false, false)
-    }
-  }
-  updateHostText = function(
-    current: Fiber,
-    workInProgress: Fiber,
-    oldText: string,
-    newText: string,
-  ): void {
-    if (oldText !== newText) {
-      const rootContainerInstance = getRootHostContainer()
-      const currentHostContext = getHostContext()
-      workInProgress.stateNode = createTextInstance(
-        newText,
-        rootContainerInstance,
-        currentHostContext,
-        workInProgress,
-      )
-      markUpdate(workInProgress)
-    }
-  }
-} else {
-  updateHostContainer = function(): void {
-    // Noop
-  }
-  updateHostComponent = function(
-    // current: Fiber,
-    // workInProgress: Fiber,
-    // type: Type,
-    // newProps: Props,
-    // rootContainerInstance: Container,
-  ): void {
-    // Noop
-  }
-  updateHostText = function(
-    // current: Fiber,
-    // workInProgress: Fiber,
-    // oldText: string,
-    // newText: string,
-  ): void {
-    // Noop
   }
 }
 
@@ -546,7 +242,6 @@ function completeWork(
               type,
               newProps,
               rootContainerInstance,
-              currentHostContext,
             )
           ) {
             markUpdate(workInProgress)

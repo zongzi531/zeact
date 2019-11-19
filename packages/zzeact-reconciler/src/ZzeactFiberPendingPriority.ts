@@ -123,3 +123,61 @@ export function markPendingPriorityLevel(
   }
   findNextExpirationTimeToWorkOn(expirationTime, root)
 }
+
+export function markCommittedPriorityLevels(
+  root: FiberRoot,
+  earliestRemainingTime: ExpirationTime,
+): void {
+  root.didError = false
+
+  if (earliestRemainingTime === NoWork) {
+    root.earliestPendingTime = NoWork
+    root.latestPendingTime = NoWork
+    root.earliestSuspendedTime = NoWork
+    root.latestSuspendedTime = NoWork
+    root.latestPingedTime = NoWork
+    findNextExpirationTimeToWorkOn(NoWork, root)
+    return
+  }
+
+  if (earliestRemainingTime < root.latestPingedTime) {
+    root.latestPingedTime = NoWork
+  }
+
+  const latestPendingTime = root.latestPendingTime
+  if (latestPendingTime !== NoWork) {
+    if (latestPendingTime > earliestRemainingTime) {
+      root.earliestPendingTime = root.latestPendingTime = NoWork
+    } else {
+      const earliestPendingTime = root.earliestPendingTime
+      if (earliestPendingTime > earliestRemainingTime) {
+        root.earliestPendingTime = root.latestPendingTime
+      }
+    }
+  }
+  const earliestSuspendedTime = root.earliestSuspendedTime
+  if (earliestSuspendedTime === NoWork) {
+    markPendingPriorityLevel(root, earliestRemainingTime)
+    findNextExpirationTimeToWorkOn(NoWork, root)
+    return
+  }
+
+  const latestSuspendedTime = root.latestSuspendedTime
+  if (earliestRemainingTime < latestSuspendedTime) {
+    root.earliestSuspendedTime = NoWork
+    root.latestSuspendedTime = NoWork
+    root.latestPingedTime = NoWork
+
+    markPendingPriorityLevel(root, earliestRemainingTime)
+    findNextExpirationTimeToWorkOn(NoWork, root)
+    return
+  }
+
+  if (earliestRemainingTime > earliestSuspendedTime) {
+    markPendingPriorityLevel(root, earliestRemainingTime)
+    findNextExpirationTimeToWorkOn(NoWork, root)
+    return
+  }
+
+  findNextExpirationTimeToWorkOn(NoWork, root)
+}

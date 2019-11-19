@@ -64,7 +64,7 @@ import {
 } from  '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ZzeactFiberHostConfig */
 import {
   markPendingPriorityLevel,
-  // markCommittedPriorityLevels,
+  markCommittedPriorityLevels,
   markSuspendedPriorityLevel,
   // markPingedPriorityLevel,
   hasLowerPriorityWork,
@@ -480,6 +480,34 @@ function onSuspend(
   }
 }
 
+function resetChildExpirationTime(
+  workInProgress: Fiber,
+  renderTime: ExpirationTime,
+): void {
+  if (renderTime !== Never && workInProgress.childExpirationTime === Never) {
+    return
+  }
+
+  let newChildExpirationTime = NoWork
+
+  {
+    let child = workInProgress.child
+    while (child !== null) {
+      const childUpdateExpirationTime = child.expirationTime
+      const childChildExpirationTime = child.childExpirationTime
+      if (childUpdateExpirationTime > newChildExpirationTime) {
+        newChildExpirationTime = childUpdateExpirationTime
+      }
+      if (childChildExpirationTime > newChildExpirationTime) {
+        newChildExpirationTime = childChildExpirationTime
+      }
+      child = child.sibling
+    }
+  }
+
+  workInProgress.childExpirationTime = newChildExpirationTime
+}
+
 function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
   while (true) {
     const current = workInProgress.alternate
@@ -490,8 +518,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
       nextUnitOfWork = workInProgress
       {
-        console.log('2019/11/14 Reading stop at completeWork (!important):', current, workInProgress, nextRenderExpirationTime)
-        debugger
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
@@ -1042,6 +1068,8 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     let error
     {
       try {
+        console.log('2019/11/19 Reading stop at commitAllHostEffects (!important)')
+        debugger
         commitAllHostEffects()
       } catch (e) {
         didError = true

@@ -1,4 +1,4 @@
-import invariant from 'shared/invariant'
+import invariant from '@/shared/invariant'
 
 import { setValueForProperty } from './DOMPropertyOperations'
 import { getFiberCurrentPropsFromNode } from './ZzeactDOMComponentTree'

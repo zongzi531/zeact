@@ -5,6 +5,9 @@ declare module '*.json' {
   export const version: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let MSApp: any
+
 // Zzeact$Element<any>
 type Zzeact$Element = {
   $$typeof: symbol | number

@@ -1,9 +1,9 @@
 import { precacheFiberNode, updateFiberProps } from './ZzeactDOMComponentTree'
 import {
-  // createElement,
-  // createTextNode,
-  // setInitialProperties,
-  // diffProperties,
+  createElement,
+  createTextNode,
+  setInitialProperties,
+  diffProperties,
   // updateProperties,
   diffHydratedProperties,
   diffHydratedText,
@@ -77,6 +77,17 @@ let eventsEnabled: boolean | null = null
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let selectionInformation: mixed | null = null
 
+function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      return !!props.autoFocus
+  }
+  return false
+}
+
 export const scheduleTimeout =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   typeof setTimeout === 'function' ? setTimeout : (undefined as any)
@@ -138,6 +149,61 @@ export function resetAfterCommit(): void {
   eventsEnabled = null
 }
 
+export function createInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  internalInstanceHandle: any,
+): Instance {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parentNamespace: string = ((hostContext as any) as HostContextProd)
+  const domElement: Instance = createElement(
+    type,
+    props,
+    rootContainerInstance,
+    parentNamespace,
+  )
+  precacheFiberNode(internalInstanceHandle, domElement)
+  updateFiberProps(domElement, props)
+  return domElement
+}
+
+
+export function appendInitialChild(
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+): void {
+  parentInstance.appendChild(child)
+}
+
+export function finalizeInitialChildren(
+  domElement: Instance,
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+): boolean {
+  setInitialProperties(domElement, type, props, rootContainerInstance)
+  return shouldAutoFocusHostComponent(type, props)
+}
+
+export function prepareUpdate(
+  domElement: Instance,
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  rootContainerInstance: Container,
+): null | Array<mixed> {
+  return diffProperties(
+    domElement,
+    type,
+    oldProps,
+    newProps,
+    rootContainerInstance,
+  )
+}
+
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -154,6 +220,28 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
   return !!props.hidden
 }
+
+export function createTextInstance(
+  text: string,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  internalInstanceHandle: any,
+): TextInstance {
+  const textNode: TextInstance = createTextNode(text, rootContainerInstance)
+  precacheFiberNode(internalInstanceHandle, textNode)
+  return textNode
+}
+
+// -------------------
+//     Mutation
+// -------------------
+
+export const supportsMutation = true
+
+// -------------------
+//     Hydration
+// -------------------
 
 export const supportsHydration = true
 

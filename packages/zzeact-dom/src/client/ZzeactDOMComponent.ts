@@ -11,11 +11,9 @@ import {
   updateWrapper as ZzeactDOMInputUpdateWrapper,
   restoreControlledState as ZzeactDOMInputRestoreControlledState,
 } from './ZzeactDOMInput'
-console.log('2019/11/18 Reading stop at ZzeactDOMInput file (!important):')
 import {
   getHostProps as ZzeactDOMOptionGetHostProps,
   postMountWrapper as ZzeactDOMOptionPostMountWrapper,
-  validateProps as ZzeactDOMOptionValidateProps,
 } from './ZzeactDOMOption'
 import {
   initWrapperState as ZzeactDOMSelectInitWrapperState,
@@ -31,7 +29,7 @@ import {
   updateWrapper as ZzeactDOMTextareaUpdateWrapper,
   restoreControlledState as ZzeactDOMTextareaRestoreControlledState,
 } from './ZzeactDOMTextarea'
-import {track} from './inputValueTracking'
+import { track } from './inputValueTracking'
 import setInnerHTML from './setInnerHTML'
 import setTextContent from './setTextContent'
 import {
@@ -42,14 +40,14 @@ import {
   TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes'
-import {listenTo, trapBubbledEvent} from '../events/ZzeactBrowserEventEmitter'
-import {mediaEventTypes} from '../events/DOMTopLevelEventTypes'
+import { listenTo, trapBubbledEvent } from '../events/ZzeactBrowserEventEmitter'
+import { mediaEventTypes } from '../events/DOMTopLevelEventTypes'
 import {
   setValueForStyles,
 } from '../shared/CSSPropertyOperations'
-import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces'
+import { Namespaces, getIntrinsicNamespace } from '../shared/DOMNamespaces'
 import assertValidProps from '../shared/assertValidProps'
-import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType'
+import { DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE } from '../shared/HTMLNodeType'
 import isCustomComponent from '../shared/isCustomComponent'
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML'
@@ -255,7 +253,6 @@ export function setInitialProperties(
       ensureListeningTo(rootContainerElement, 'onChange')
       break
     case 'option':
-      ZzeactDOMOptionValidateProps(domElement, rawProps)
       props = ZzeactDOMOptionGetHostProps(domElement, rawProps)
       break
     case 'select':
@@ -293,7 +290,7 @@ export function setInitialProperties(
     case 'textarea':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       track((domElement as any))
-      ZzeactDOMTextareaPostMountWrapper(domElement, rawProps)
+      ZzeactDOMTextareaPostMountWrapper(domElement)
       break
     case 'option':
       ZzeactDOMOptionPostMountWrapper(domElement, rawProps)
@@ -556,7 +553,6 @@ export function diffHydratedProperties(
       ensureListeningTo(rootContainerElement, 'onChange')
       break
     case 'option':
-      ZzeactDOMOptionValidateProps(domElement, rawProps)
       break
     case 'select':
       ZzeactDOMSelectInitWrapperState(domElement, rawProps)
@@ -604,7 +600,7 @@ export function diffHydratedProperties(
     case 'textarea':
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       track((domElement as any))
-      ZzeactDOMTextareaPostMountWrapper(domElement, rawProps)
+      ZzeactDOMTextareaPostMountWrapper(domElement)
       break
     case 'select':
     case 'option':
