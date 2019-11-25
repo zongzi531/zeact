@@ -152,7 +152,7 @@ function prepareToHydrateHostInstance(
     invariant(
       false,
       'Expected prepareToHydrateHostInstance() to never be called. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+        'This error is likely caused by a bug in Zzeact. Please file an issue.',
     )
   }
 
@@ -178,7 +178,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
     invariant(
       false,
       'Expected prepareToHydrateHostTextInstance() to never be called. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+        'This error is likely caused by a bug in Zzeact. Please file an issue.',
     )
   }
 
@@ -193,14 +193,14 @@ function skipPastDehydratedSuspenseInstance(fiber: Fiber): void {
     invariant(
       false,
       'Expected skipPastDehydratedSuspenseInstance() to never be called. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+        'This error is likely caused by a bug in Zzeact. Please file an issue.',
     )
   }
   const suspenseInstance = fiber.stateNode
   invariant(
     suspenseInstance,
     'Expected to have a hydrated suspense instance. ' +
-      'This error is likely caused by a bug in React. Please file an issue.',
+      'This error is likely caused by a bug in Zzeact. Please file an issue.',
   )
   nextHydratableInstance = getNextHydratableInstanceAfterSuspenseInstance(
     suspenseInstance,

@@ -62,10 +62,8 @@ import {popProvider} from './ZzeactFiberNewContext'
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
-  skipPastDehydratedSuspenseInstance,
   popHydrationState,
 } from './ZzeactFiberHydrationContext'
-import {enableSuspenseServerRenderer} from '@/shared/ZzeactFeatureFlags'
 
 function markUpdate(workInProgress: Fiber): void {
   workInProgress.effectTag |= Update
@@ -344,23 +342,6 @@ function completeWork(
       break
     }
     case DehydratedSuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        if (current === null) {
-          const wasHydrated = popHydrationState(workInProgress)
-          invariant(
-            wasHydrated,
-            'A dehydrated suspense component was completed without a hydrated node. ' +
-              'This is probably a bug in Zzeact.',
-          )
-          skipPastDehydratedSuspenseInstance(workInProgress)
-        } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-          current.alternate = null
-          workInProgress.alternate = null
-          workInProgress.tag = SuspenseComponent
-          workInProgress.memoizedState = null
-          workInProgress.stateNode = null
-        }
-      }
       break
     }
     default:

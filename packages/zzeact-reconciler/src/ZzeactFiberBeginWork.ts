@@ -26,15 +26,16 @@ import {
   IncompleteClassComponent,
 } from '@/shared/ZzeactWorkTags'
 import {
-  // NoEffect,
-  // PerformedWork,
+  NoEffect,
+  PerformedWork,
   Placement,
   ContentReset,
-  // DidCapture,
+  DidCapture,
   // Update,
   Ref,
   // Deletion,
 } from '@/shared/ZzeactSideEffectTags'
+import ZzeactSharedInternals from '@/shared/ZzeactSharedInternals'
 import {
   // debugRenderPhaseSideEffects,
   // debugRenderPhaseSideEffectsForStrictMode,
@@ -62,18 +63,19 @@ import {
   pushProvider,
   // propagateContextChange,
   // readContext,
-  // prepareToReadContext,
+  prepareToReadContext,
   // calculateChangedBits,
 } from './ZzeactFiberNewContext'
+import { resetHooks, renderWithHooks/* , bailoutHooks */ } from './ZzeactFiberHooks'
 // import { stopProfilerTimerIfRunning } from './ZzeactProfilerTimer'
 import {
-  // getMaskedContext,
-  // getUnmaskedContext,
+  getMaskedContext,
+  getUnmaskedContext,
   hasContextChanged as hasLegacyContextChanged,
   pushContextProvider as pushLegacyContextProvider,
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
-  // invalidateContextProvider,
+  invalidateContextProvider,
 } from './ZzeactFiberContext'
 import {
   enterHydrationState,
@@ -81,6 +83,16 @@ import {
   resetHydrationState,
   tryToClaimNextHydratableInstance,
 } from './ZzeactFiberHydrationContext'
+import {
+  adoptClassInstance,
+  applyDerivedStateFromProps,
+  // constructClassInstance,
+  mountClassInstance,
+  // resumeMountClassInstance,
+  // updateClassInstance,
+} from './ZzeactFiberClassComponent'
+
+const ZzeactCurrentOwner = ZzeactSharedInternals.ZzeactCurrentOwner
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let didReceiveUpdate: boolean = false
@@ -97,6 +109,10 @@ function pushHostRootContext(workInProgress): void {
     pushTopLevelContextObject(workInProgress, root.context, false)
   }
   pushHostContainer(workInProgress, root.containerInfo)
+}
+
+export function markWorkInProgressReceivedUpdate(): void {
+  didReceiveUpdate = true
 }
 
 function bailoutOnAlreadyFinishedWork(
@@ -139,6 +155,92 @@ export function reconcileChildren(
       renderExpirationTime,
     )
   }
+}
+
+function forceUnmountCurrentAndReconcile(
+  current: Fiber,
+  workInProgress: Fiber,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  nextChildren: any,
+  renderExpirationTime: ExpirationTime,
+): void {
+  workInProgress.child = reconcileChildFibers(
+    workInProgress,
+    current.child,
+    null,
+    renderExpirationTime,
+  )
+  workInProgress.child = reconcileChildFibers(
+    workInProgress,
+    null,
+    nextChildren,
+    renderExpirationTime,
+  )
+}
+
+function finishClassComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Component: any,
+  shouldUpdate: boolean,
+  hasContext: boolean,
+  renderExpirationTime: ExpirationTime,
+): Fiber {
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  markRef(current, workInProgress)
+
+  const didCaptureError = (workInProgress.effectTag & DidCapture) !== NoEffect
+
+  if (!shouldUpdate && !didCaptureError) {
+    if (hasContext) {
+      invalidateContextProvider(workInProgress, Component, false)
+    }
+
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    )
+  }
+
+  const instance = workInProgress.stateNode
+
+  ZzeactCurrentOwner.current = workInProgress
+  let nextChildren
+  if (
+    didCaptureError &&
+    typeof Component.getDerivedStateFromError !== 'function'
+  ) {
+    nextChildren = null
+  } else {
+    nextChildren = instance.render()
+  }
+
+  workInProgress.effectTag |= PerformedWork
+  if (current !== null && didCaptureError) {
+    forceUnmountCurrentAndReconcile(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    )
+  } else {
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    )
+  }
+
+  workInProgress.memoizedState = instance.state
+
+  if (hasContext) {
+    invalidateContextProvider(workInProgress, Component, true)
+  }
+
+  return workInProgress.child
 }
 
 function markRef(current: Fiber | null, workInProgress: Fiber): void {
@@ -245,6 +347,82 @@ function updateHostComponent(current, workInProgress, renderExpirationTime): Fib
   return workInProgress.child
 }
 
+function mountIndeterminateComponent(
+  _current,
+  workInProgress,
+  Component,
+  renderExpirationTime,
+): Fiber {
+  if (_current !== null) {
+    _current.alternate = null
+    workInProgress.alternate = null
+    workInProgress.effectTag |= Placement
+  }
+
+  const props = workInProgress.pendingProps
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component, false)
+  const context = getMaskedContext(workInProgress, unmaskedContext)
+
+  prepareToReadContext(workInProgress, renderExpirationTime)
+
+  const value = renderWithHooks(
+    null,
+    workInProgress,
+    Component,
+    props,
+    context,
+    renderExpirationTime,
+  )
+  workInProgress.effectTag |= PerformedWork
+
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.render === 'function' &&
+    value.$$typeof === undefined
+  ) {
+    workInProgress.tag = ClassComponent
+
+    resetHooks()
+
+    let hasContext = false
+    if (isLegacyContextProvider(Component)) {
+      hasContext = true
+      pushLegacyContextProvider(workInProgress)
+    } else {
+      hasContext = false
+    }
+
+    workInProgress.memoizedState =
+      value.state !== null && value.state !== undefined ? value.state : null
+
+    const getDerivedStateFromProps = Component.getDerivedStateFromProps
+    if (typeof getDerivedStateFromProps === 'function') {
+      applyDerivedStateFromProps(
+        workInProgress,
+        Component,
+        getDerivedStateFromProps,
+        props,
+      )
+    }
+
+    adoptClassInstance(workInProgress, value)
+    mountClassInstance(workInProgress, Component, props, renderExpirationTime)
+    return finishClassComponent(
+      null,
+      workInProgress,
+      Component,
+      true,
+      hasContext,
+      renderExpirationTime,
+    )
+  } else {
+    workInProgress.tag = FunctionComponent
+    reconcileChildren(null, workInProgress, value, renderExpirationTime)
+    return workInProgress.child
+  }
+}
+
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -260,7 +438,6 @@ function beginWork(
       didReceiveUpdate = true
     } else if (updateExpirationTime < renderExpirationTime) {
       didReceiveUpdate = false
-      console.log('2019/11/6 debug before WorkInProgress Tag:', workInProgress.tag)
       switch (workInProgress.tag) {
         case HostRoot:
           pushHostRootContext(workInProgress)
@@ -334,10 +511,11 @@ function beginWork(
   }
 
   workInProgress.expirationTime = NoWork
-  console.log('2019/11/6 debug WorkInProgress Tag:', workInProgress.tag)
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
       const elementType = workInProgress.elementType
+      console.log('2019/11/25 Reading stop at mountIndeterminateComponent (!important)')
+      debugger
       return mountIndeterminateComponent(
         current,
         workInProgress,
@@ -356,6 +534,8 @@ function beginWork(
       )
     }
     case FunctionComponent: {
+      console.log('2019/11/25 Reading stop at FunctionComponent (!important)')
+      debugger
       const Component = workInProgress.type
       const unresolvedProps = workInProgress.pendingProps
       const resolvedProps =
@@ -371,6 +551,8 @@ function beginWork(
       )
     }
     case ClassComponent: {
+      console.log('2019/11/25 Reading stop at ClassComponent (!!important 555:)')
+      debugger
       const Component = workInProgress.type
       const unresolvedProps = workInProgress.pendingProps
       const resolvedProps =

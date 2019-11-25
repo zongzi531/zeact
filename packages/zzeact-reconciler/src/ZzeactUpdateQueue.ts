@@ -4,6 +4,7 @@ import { NoWork } from './ZzeactFiberExpirationTime'
 
 import { Callback, ShouldCapture, DidCapture } from '@/shared/ZzeactSideEffectTags'
 
+import invariant from '@/shared/invariant'
 
 export type Update<State> = {
   expirationTime: ExpirationTime
@@ -310,4 +311,52 @@ export function processUpdateQueue<State>(
 
   workInProgress.expirationTime = newExpirationTime
   workInProgress.memoizedState = resultState
+}
+
+function callCallback(callback, context): void {
+  invariant(
+    typeof callback === 'function',
+    'Invalid argument passed as callback. Expected a function. Instead ' +
+      'received: %s',
+    callback,
+  )
+  callback.call(context)
+}
+
+export function commitUpdateQueue<State>(
+  finishedWork: Fiber,
+  finishedQueue: UpdateQueue<State>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  instance: any
+): void {
+  if (finishedQueue.firstCapturedUpdate !== null) {
+    if (finishedQueue.lastUpdate !== null) {
+      finishedQueue.lastUpdate.next = finishedQueue.firstCapturedUpdate
+      finishedQueue.lastUpdate = finishedQueue.lastCapturedUpdate
+    }
+    finishedQueue.firstCapturedUpdate = finishedQueue.lastCapturedUpdate = null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  commitUpdateEffects(finishedQueue.firstEffect, instance)
+  finishedQueue.firstEffect = finishedQueue.lastEffect = null
+
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  commitUpdateEffects(finishedQueue.firstCapturedEffect, instance)
+  finishedQueue.firstCapturedEffect = finishedQueue.lastCapturedEffect = null
+}
+
+function commitUpdateEffects<State>(
+  effect: Update<State> | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  instance: any,
+): void {
+  while (effect !== null) {
+    const callback = effect.callback
+    if (callback !== null) {
+      effect.callback = null
+      callCallback(callback, instance)
+    }
+    effect = effect.nextEffect
+  }
 }

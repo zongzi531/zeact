@@ -1,5 +1,7 @@
 import { Fiber } from './ZzeactFiber'
 
+import { get as getInstance } from '@/shared/ZzeactInstanceMap'
+
 import {
   // ClassComponent,
   // HostComponent,
@@ -37,5 +39,14 @@ function isFiberMountedImpl(fiber: Fiber): number {
 }
 
 export function isFiberMounted(fiber: Fiber): boolean {
+  return isFiberMountedImpl(fiber) === MOUNTED
+}
+
+export function isMounted(component: Zzeact$Component): boolean {
+
+  const fiber: Fiber | null = getInstance(component)
+  if (!fiber) {
+    return false
+  }
   return isFiberMountedImpl(fiber) === MOUNTED
 }

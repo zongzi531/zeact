@@ -1,6 +1,8 @@
 import { Fiber } from './ZzeactFiber'
 import { FiberRoot } from './ZzeactFiberRoot'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
+import { CapturedValue } from './ZzeactCapturedValue'
+import { Update } from './ZzeactUpdateQueue'
 
 import {
   ClassComponent,
@@ -8,18 +10,88 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
-  // SuspenseComponent,
-  // DehydratedSuspenseComponent,
+  SuspenseComponent,
+  DehydratedSuspenseComponent,
   // IncompleteClassComponent,
 } from '@/shared/ZzeactWorkTags'
+import {
+  DidCapture,
+  // Incomplete,
+  NoEffect,
+  ShouldCapture,
+  // LifecycleEffectMask,
+} from '@/shared/ZzeactSideEffectTags'
 
+import {
+  // enqueueCapturedUpdate,
+  createUpdate,
+  CaptureUpdate,
+  // ForceUpdate,
+  // enqueueUpdate,
+} from './ZzeactUpdateQueue'
 import { popHostContainer, popHostContext } from './ZzeactFiberHostContext'
 import {
-  // isContextProvider as isLegacyContextProvider,
+  isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ZzeactFiberContext'
 import { popProvider } from './ZzeactFiberNewContext'
+
+import invariant from '@/shared/invariant'
+
+function createRootErrorUpdate(
+  fiber: Fiber,
+  errorInfo: CapturedValue<mixed>,
+  expirationTime: ExpirationTime,
+): Update<mixed> {
+  const update = createUpdate(expirationTime)
+  update.tag = CaptureUpdate
+  update.payload = {element: null}
+  const error = errorInfo.value
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  update.callback = (): any => {
+    console.log('2019/11/25 Reading skip onUncaughtError', error)
+    // onUncaughtError(error)
+    console.log('2019/11/25 Reading skip logError', fiber, errorInfo)
+    // logError(fiber, errorInfo)
+  }
+  return update
+}
+
+function createClassErrorUpdate(
+  fiber: Fiber,
+  errorInfo: CapturedValue<mixed>,
+  expirationTime: ExpirationTime,
+): Update<mixed> {
+  const update = createUpdate(expirationTime)
+  update.tag = CaptureUpdate
+  const getDerivedStateFromError = fiber.type.getDerivedStateFromError
+  if (typeof getDerivedStateFromError === 'function') {
+    const error = errorInfo.value
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    update.payload = (): any => {
+      return getDerivedStateFromError(error)
+    }
+  }
+
+  const inst = fiber.stateNode
+  if (inst !== null && typeof inst.componentDidCatch === 'function') {
+    update.callback = function callback(): void {
+      if (typeof getDerivedStateFromError !== 'function') {
+        console.log('2019/11/25 Reading skip markLegacyErrorBoundaryAsFailed', this)
+        // markLegacyErrorBoundaryAsFailed(this)
+      }
+      const error = errorInfo.value
+      const stack = errorInfo.stack
+      console.log('2019/11/25 Reading skip logError', fiber, errorInfo)
+      // logError(fiber, errorInfo)
+      this.componentDidCatch(error, {
+        componentStack: stack !== null ? stack : '',
+      })
+    }
+  }
+  return update
+}
 
 function throwException(
   root: FiberRoot,
@@ -268,6 +340,60 @@ function throwException(
   // } while (workInProgress !== null)
 }
 
+function unwindWork(
+  workInProgress: Fiber,
+): Fiber | null {
+  switch (workInProgress.tag) {
+    case ClassComponent: {
+      const Component = workInProgress.type
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext()
+      }
+      const effectTag = workInProgress.effectTag
+      if (effectTag & ShouldCapture) {
+        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture
+        return workInProgress
+      }
+      return null
+    }
+    case HostRoot: {
+      popHostContainer()
+      popTopLevelLegacyContextObject()
+      const effectTag = workInProgress.effectTag
+      invariant(
+        (effectTag & DidCapture) === NoEffect,
+        'The root failed to unmount after an error. This is likely a bug in ' +
+          'Zzeact. Please file an issue.',
+      )
+      workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture
+      return workInProgress
+    }
+    case HostComponent: {
+      popHostContext(workInProgress)
+      return null
+    }
+    case SuspenseComponent: {
+      const effectTag = workInProgress.effectTag
+      if (effectTag & ShouldCapture) {
+        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture
+        return workInProgress
+      }
+      return null
+    }
+    case DehydratedSuspenseComponent: {
+      return null
+    }
+    case HostPortal:
+      popHostContainer()
+      return null
+    case ContextProvider:
+      popProvider(workInProgress)
+      return null
+    default:
+      return null
+  }
+}
+
 function unwindInterruptedWork(interruptedWork: Fiber): void {
   switch (interruptedWork.tag) {
     case ClassComponent: {
@@ -299,8 +425,8 @@ function unwindInterruptedWork(interruptedWork: Fiber): void {
 
 export {
   throwException,
-  // unwindWork,
+  unwindWork,
   unwindInterruptedWork,
-  // createRootErrorUpdate,
-  // createClassErrorUpdate,
+  createRootErrorUpdate,
+  createClassErrorUpdate,
 }

@@ -4,10 +4,10 @@ import {
   createTextNode,
   setInitialProperties,
   diffProperties,
-  // updateProperties,
+  updateProperties,
   diffHydratedProperties,
   diffHydratedText,
-  // trapClickOnNonInteractiveElement,
+  trapClickOnNonInteractiveElement,
   // warnForUnmatchedText,
   // warnForDeletedHydratableElement,
   // warnForDeletedHydratableText,
@@ -15,6 +15,7 @@ import {
   // warnForInsertedHydratedText,
 } from './ZzeactDOMComponent'
 import { getSelectionInformation, restoreSelection } from './ZzeactInputSelection'
+import setTextContent from './setTextContent'
 
 import {
   isEnabled as ZzeactBrowserEventEmitterIsEnabled,
@@ -22,12 +23,12 @@ import {
 } from '../events/ZzeactBrowserEventEmitter'
 
 import {
-  // unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_scheduleCallback as scheduleDeferredCallback,
   unstable_cancelCallback as cancelDeferredCallback,
 } from '@/scheduler'
 export {
   unstable_now as now,
-  // unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_scheduleCallback as scheduleDeferredCallback,
   unstable_shouldYield as shouldYield,
   unstable_cancelCallback as cancelDeferredCallback,
 } from '@/scheduler'
@@ -40,6 +41,10 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType'
+import dangerousStyleValue from '../shared/dangerousStyleValue'
+
+import { DOMContainer } from './ZzeactDOM'
+
 
 export type Type = string
 export type Props = {
@@ -72,6 +77,8 @@ export type NoTimeout = -1
 const SUSPENSE_START_DATA = '$'
 const SUSPENSE_END_DATA = '/$'
 
+const STYLE = 'style'
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let eventsEnabled: boolean | null = null
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -96,6 +103,12 @@ export const noTimeout = -1
 export const cancelPassiveEffects = cancelDeferredCallback
 
 export const isPrimaryRenderer = true
+
+export const cancelTimeout =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  typeof clearTimeout === 'function' ? clearTimeout : (undefined as any)
+
+export const schedulePassiveEffects = scheduleDeferredCallback
 
 export function getRootHostContext(
   rootContainerInstance: Container,
@@ -134,6 +147,11 @@ export function getChildHostContext(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const parentNamespace = ((parentHostContext as any) as HostContextProd)
   return getChildNamespace(parentNamespace, type)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getPublicInstance(instance: Instance): any {
+  return instance
 }
 
 export function prepareForCommit(): void {
@@ -238,6 +256,182 @@ export function createTextInstance(
 // -------------------
 
 export const supportsMutation = true
+
+export function commitMount(
+  domElement: Instance,
+  type: string,
+  newProps: Props,
+): void {
+  if (shouldAutoFocusHostComponent(type, newProps)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((domElement as any) as
+      | HTMLButtonElement
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement).focus()
+  }
+}
+
+export function commitUpdate(
+  domElement: Instance,
+  updatePayload: Array<mixed>,
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+): void {
+  updateFiberProps(domElement, newProps)
+  updateProperties(domElement, updatePayload, type, oldProps, newProps)
+}
+
+export function resetTextContent(domElement: Instance): void {
+  setTextContent(domElement, '')
+}
+
+export function commitTextUpdate(
+  textInstance: TextInstance,
+  oldText: string,
+  newText: string,
+): void {
+  textInstance.nodeValue = newText
+}
+
+export function appendChild(
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+): void {
+  parentInstance.appendChild(child)
+}
+
+export function appendChildToContainer(
+  container: DOMContainer,
+  child: Instance | TextInstance,
+): void {
+  let parentNode
+  if (container.nodeType === COMMENT_NODE) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parentNode = (container.parentNode as any)
+    parentNode.insertBefore(child, container)
+  } else {
+    parentNode = container
+    parentNode.appendChild(child)
+  }
+  const zzeactRootContainer = container._zzeactRootContainer
+  if (
+    (zzeactRootContainer === null || zzeactRootContainer === undefined) &&
+    parentNode.onclick === null
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    trapClickOnNonInteractiveElement(((parentNode as any) as HTMLElement))
+  }
+}
+
+export function insertBefore(
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
+): void {
+  parentInstance.insertBefore(child, beforeChild)
+}
+
+export function insertInContainerBefore(
+  container: Container,
+  child: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
+): void {
+  if (container.nodeType === COMMENT_NODE) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (container.parentNode as any).insertBefore(child, beforeChild)
+  } else {
+    container.insertBefore(child, beforeChild)
+  }
+}
+
+export function removeChild(
+  parentInstance: Instance,
+  child: Instance | TextInstance | SuspenseInstance,
+): void {
+  parentInstance.removeChild(child)
+}
+
+export function removeChildFromContainer(
+  container: Container,
+  child: Instance | TextInstance | SuspenseInstance,
+): void {
+  if (container.nodeType === COMMENT_NODE) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (container.parentNode as any).removeChild(child)
+  } else {
+    container.removeChild(child)
+  }
+}
+
+export function clearSuspenseBoundary(
+  parentInstance: Instance,
+  suspenseInstance: SuspenseInstance,
+): void {
+  let node = suspenseInstance
+  let depth = 0
+  do {
+    const nextNode = node.nextSibling
+    parentInstance.removeChild(node)
+    if (nextNode && nextNode.nodeType === COMMENT_NODE) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = ((nextNode as any).data as string)
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          parentInstance.removeChild(nextNode)
+          return
+        } else {
+          depth--
+        }
+      } else if (data === SUSPENSE_START_DATA) {
+        depth++
+      }
+    }
+    node = nextNode as Comment
+  } while (node)
+}
+
+export function clearSuspenseBoundaryFromContainer(
+  container: Container,
+  suspenseInstance: SuspenseInstance,
+): void {
+  if (container.nodeType === COMMENT_NODE) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clearSuspenseBoundary((container.parentNode as any), suspenseInstance)
+  } else if (container.nodeType === ELEMENT_NODE) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clearSuspenseBoundary((container as any), suspenseInstance)
+  }
+}
+
+export function hideInstance(instance: Instance | HTMLElement): void {
+  // instance = ((instance as any) as HTMLElement)
+  (instance as HTMLElement).style.display = 'none'
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+  textInstance.nodeValue = ''
+}
+
+export function unhideInstance(instance: Instance | HTMLElement, props: Props): void {
+  // instance = ((instance as any) as HTMLElement)
+  const styleProp = props[STYLE]
+  const display =
+    styleProp !== undefined &&
+    styleProp !== null &&
+    styleProp.hasOwnProperty('display')
+      ? styleProp.display
+      : null
+  ;(instance as HTMLElement).style.display = dangerousStyleValue('display', display)
+}
+
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
+  textInstance.nodeValue = text
+}
 
 // -------------------
 //     Hydration

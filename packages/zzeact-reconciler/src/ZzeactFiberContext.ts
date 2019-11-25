@@ -17,6 +17,63 @@ let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let previousContext: object = emptyContextObject
 
+function getUnmaskedContext(
+  workInProgress: Fiber,
+  Component: Function,
+  didPushOwnContextIfProvider: boolean,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define, @typescript-eslint/no-explicit-any
+  if (didPushOwnContextIfProvider && isContextProvider(Component as Function & { childContextTypes: any })) {
+    return previousContext
+  }
+  return contextStackCursor.current
+}
+
+function cacheContext(
+  workInProgress: Fiber,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  unmaskedContext: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  maskedContext: any,
+): void {
+  const instance = workInProgress.stateNode
+  instance.__zzeactInternalMemoizedUnmaskedChildContext = unmaskedContext
+  instance.__zzeactInternalMemoizedMaskedChildContext = maskedContext
+}
+
+function getMaskedContext(
+  workInProgress: Fiber,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  unmaskedContext: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  const type = workInProgress.type
+  const contextTypes = type.contextTypes
+  if (!contextTypes) {
+    return emptyContextObject
+  }
+
+  const instance = workInProgress.stateNode
+  if (
+    instance &&
+    instance.__zzeactInternalMemoizedUnmaskedChildContext === unmaskedContext
+  ) {
+    return instance.__zzeactInternalMemoizedMaskedChildContext
+  }
+
+  const context = {}
+  for (const key in contextTypes) {
+    context[key] = unmaskedContext[key]
+  }
+
+  if (instance) {
+    cacheContext(workInProgress, unmaskedContext, context)
+  }
+
+  return context
+}
+
 function hasContextChanged(): boolean {
   return didPerformWorkStackCursor.current
 }
@@ -94,6 +151,37 @@ function pushContextProvider(workInProgress: Fiber): boolean {
   return true
 }
 
+function invalidateContextProvider(
+  workInProgress: Fiber,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type: any,
+  didChange: boolean,
+): void {
+  const instance = workInProgress.stateNode
+  invariant(
+    instance,
+    'Expected to have an instance by this point. ' +
+      'This error is likely caused by a bug in Zzeact. Please file an issue.',
+  )
+
+  if (didChange) {
+    const mergedContext = processChildContext(
+      workInProgress,
+      type,
+      previousContext,
+    )
+    instance.__zzeactInternalMemoizedMergedChildContext = mergedContext
+
+    pop(didPerformWorkStackCursor)
+    pop(contextStackCursor)
+    push(contextStackCursor, mergedContext)
+    push(didPerformWorkStackCursor, didChange)
+  } else {
+    pop(didPerformWorkStackCursor)
+    push(didPerformWorkStackCursor, didChange)
+  }
+}
+
 function findCurrentUnmaskedContext(fiber: Fiber): object {
   invariant(
     isFiberMounted(fiber) && fiber.tag === ClassComponent,
@@ -124,9 +212,9 @@ function findCurrentUnmaskedContext(fiber: Fiber): object {
 }
 
 export {
-  // getUnmaskedContext,
-  // cacheContext,
-  // getMaskedContext,
+  getUnmaskedContext,
+  cacheContext,
+  getMaskedContext,
   hasContextChanged,
   popContext,
   popTopLevelContextObject,
@@ -134,6 +222,6 @@ export {
   processChildContext,
   isContextProvider,
   pushContextProvider,
-  // invalidateContextProvider,
+  invalidateContextProvider,
   findCurrentUnmaskedContext,
 }
