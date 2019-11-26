@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>All DOM Example</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' href='./shared/css/base.css' />
+    <script src='./Zzeact.umd.js'></script>
+    <script src='./ZzeactDOM.umd.js'></script>
+    <style>
+      .all-dom-wrapper > div {
+        background-color: #fff;
+        box-shadow: inset 5px 5px 10px rgba(0, 0, 0, .3), inset -5px -5px 10px rgba(0, 0, 0, .2);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 24px 1em 0 0;
+        padding: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='container'>
+      <p>If you can see this, Zzeact is not working right.</p>
+    </div>
+    <script>
+      class ExampleApplication extends Zzeact.Component {
+        render() {
+          // 转换来自 Babel 生成
+          return Zzeact.createElement('div', {
+            className: 'all-dom-wrapper'
+          }, Zzeact.createElement('div', {
+            className: 'a p ul li'
+          }, Zzeact.createElement('p', null, 'You can reach Michael at:'), Zzeact.createElement('ul', null, Zzeact.createElement('li', null, Zzeact.createElement('a', {
+            href: 'https://example.com'
+          }, 'Website')), Zzeact.createElement('li', null, Zzeact.createElement('a', {
+            href: 'mailto:m.bluth@example.com'
+          }, 'Email')), Zzeact.createElement('li', null, Zzeact.createElement('a', {
+            href: 'tel:+123456789'
+          }, 'Phone')))), Zzeact.createElement('div', {
+            className: 'abbr p'
+          }, Zzeact.createElement('p', null, 'You can use ', Zzeact.createElement('abbr', {
+            title: 'Cascading Style Sheets'
+          }, 'CSS'), ' to style your ', Zzeact.createElement('abbr', {
+            title: 'HyperText Markup Language'
+          }, 'HTML'), '.')), Zzeact.createElement('div', {
+            className: 'address p a'
+          }, Zzeact.createElement('p', null, 'Contact the author of this page:'), Zzeact.createElement('address', null, Zzeact.createElement('a', {
+            href: 'mailto:jim@rock.com'
+          }, 'jim@rock.com'), Zzeact.createElement('br', null), Zzeact.createElement('a', {
+            href: 'tel:+311-555-2368'
+          }, '+311-555-2368'), Zzeact.createElement('br', null))), Zzeact.createElement('div', {
+            className: 'audio figure figcaption code'
+          }, Zzeact.createElement('figure', null, Zzeact.createElement('figcaption', null, 'Listen to the T-Rex:'), Zzeact.createElement('audio', {
+            controls: true,
+            src: '/media/examples/t-rex-roar.mp3'
+          }, 'Your browser does not support the', Zzeact.createElement('code', null, 'audio'), ' element.'))), Zzeact.createElement('div', {
+            className: 'b p'
+          }, Zzeact.createElement('p', null, 'The two most popular science courses offered by the school are ', Zzeact.createElement('b', {
+            class: 'term'
+          }, 'chemistry'), ' (the study of chemicals and the composition of substances) and ', Zzeact.createElement('b', {
+            class: 'term'
+          }, 'physics'), ' (the study of the nature and properties of matter and energy).')), Zzeact.createElement('div', {
+            className: 'br p'
+          }, Zzeact.createElement('p', null, ' O\u2019er all the hilltops', Zzeact.createElement('br', null), 'Is quiet now,', Zzeact.createElement('br', null), 'In all the treetops', Zzeact.createElement('br', null), 'Hearest thou', Zzeact.createElement('br', null), 'Hardly a breath;', Zzeact.createElement('br', null), 'The birds are asleep in the trees:', Zzeact.createElement('br', null), 'Wait, soon like these', Zzeact.createElement('br', null), 'Thou too shalt rest.')), Zzeact.createElement('div', {
+            className: 'button'
+          }, Zzeact.createElement('button', {
+            class: 'favorite styled',
+            type: 'button'
+          }, 'Add to favorites')), Zzeact.createElement('div', {
+            className: 'code p'
+          }, Zzeact.createElement('p', null, 'The ', Zzeact.createElement('code', null, 'push()'), ' method adds one or more elements to the end of an array and returns the new length of the array.')), Zzeact.createElement('div', {
+            className: 'col table caption colgroup tr td th'
+          }, Zzeact.createElement('table', null, Zzeact.createElement('caption', null, 'Superheros and sidekicks'), Zzeact.createElement('colgroup', null, Zzeact.createElement('col', null), Zzeact.createElement('col', {
+            span: '2',
+            class: 'batman'
+          }), Zzeact.createElement('col', {
+            span: '2',
+            class: 'flash'
+          })), Zzeact.createElement('tr', null, Zzeact.createElement('td', null, ' '), Zzeact.createElement('th', {
+            scope: 'col'
+          }, 'Batman'), Zzeact.createElement('th', {
+            scope: 'col'
+          }, 'Robin'), Zzeact.createElement('th', {
+            scope: 'col'
+          }, 'The Flash'), Zzeact.createElement('th', {
+            scope: 'col'
+          }, 'Kid Flash')), Zzeact.createElement('tr', null, Zzeact.createElement('th', {
+            scope: 'row'
+          }, 'Skill'), Zzeact.createElement('td', null, 'Smarts'), Zzeact.createElement('td', null, 'Dex, acrobat'), Zzeact.createElement('td', null, 'Super speed'), Zzeact.createElement('td', null, 'Super speed')))), Zzeact.createElement('div', {
+            className: 'dd p dl dt'
+          }, Zzeact.createElement('p', null, 'Cryptids of Cornwall:'), Zzeact.createElement('dl', null, Zzeact.createElement('dt', null, 'Beast of Bodmin'), Zzeact.createElement('dd', null, 'A large feline inhabiting Bodmin Moor.'), Zzeact.createElement('dt', null, 'Morgawr'), Zzeact.createElement('dd', null, 'A sea serpent.'), Zzeact.createElement('dt', null, 'Owlman'), Zzeact.createElement('dd', null, 'A giant owl-like creature.'))), Zzeact.createElement('div', {
+            className: 'section h1 p'
+          }, Zzeact.createElement('section', null, Zzeact.createElement('h1', null, 'Introduction'), Zzeact.createElement('p', null, 'People have been catching fish for food since before recorded history...')), Zzeact.createElement('section', null, Zzeact.createElement('h1', null, 'Equipment'), Zzeact.createElement('p', null, 'The first thing you\'ll need is a fishing rod or pole that you find comfortable and is strong enough for the kind of fish you\'re expecting to try to land...'))), Zzeact.createElement('div', {
+            className: 'em p'
+          }, Zzeact.createElement('p', null, 'Get out of bed ', Zzeact.createElement('em', null, 'now'), '!'), Zzeact.createElement('p', null, 'We ', Zzeact.createElement('em', null, 'had'), ' to do something about it.'), Zzeact.createElement('p', null, 'This is ', Zzeact.createElement('em', null, 'not'), ' a drill!')), Zzeact.createElement('div', {
+            className: 'embed'
+          }, Zzeact.createElement('embed', {
+            type: 'video/webm',
+            src: 'media/examples/flower.mp4',
+            width: '250',
+            height: '200'
+          })), Zzeact.createElement('div', {
+            className: 'fieldset form legend input label br'
+          }, Zzeact.createElement('form', null, Zzeact.createElement('fieldset', null, Zzeact.createElement('legend', null, 'Choose your favorite monster'), Zzeact.createElement('input', {
+            type: 'radio',
+            id: 'kraken',
+            name: 'monster'
+          }), Zzeact.createElement('label', {
+            for: 'kraken'
+          }, 'Kraken'), Zzeact.createElement('br', null), Zzeact.createElement('input', {
+            type: 'radio',
+            id: 'sasquatch',
+            name: 'monster'
+          }), Zzeact.createElement('label', {
+            for: 'sasquatch'
+          }, 'Sasquatch'), Zzeact.createElement('br', null), Zzeact.createElement('input', {
+            type: 'radio',
+            id: 'mothman',
+            name: 'monster'
+          }), Zzeact.createElement('label', {
+            for: 'mothman'
+          }, 'Mothman')))), Zzeact.createElement('div', {
+            className: 'footer article h1 ol li p'
+          }, Zzeact.createElement('article', null, Zzeact.createElement('h1', null, 'How to be a wizard'), Zzeact.createElement('ol', null, Zzeact.createElement('li', null, 'Grow a long, majestic beard.'), Zzeact.createElement('li', null, 'Wear a tall pointed hat. '), Zzeact.createElement('li', null, 'Have I mentioned the beard?')), Zzeact.createElement('footer', null, Zzeact.createElement('p', null, '\xA9 2018 Gandalf')))), Zzeact.createElement('div', {
+            className: 'h2 h1 h3 h4 h5 h6'
+          }, Zzeact.createElement('h1', null, 'Beetles'), Zzeact.createElement('h2', null, 'External morphology'), Zzeact.createElement('h3', null, 'Head'), Zzeact.createElement('h4', null, 'Mouthparts'), Zzeact.createElement('h5', null, 'Thorax'), Zzeact.createElement('h6', null, 'Prothorax')), Zzeact.createElement('div', {
+            className: 'header h1 p strong'
+          }, Zzeact.createElement('header', {
+            class: 'page-header'
+          }, Zzeact.createElement('h1', null, 'Cute Puppies Express!')), Zzeact.createElement('main', null, Zzeact.createElement('p', null, 'I love Beagles ', Zzeact.createElement('strong', null, 'so'), ' much! Like really, a lot. They\'re adorable and their ears are so, so snuggly soft!'))), Zzeact.createElement('div', {
+            className: 'hr p'
+          }, Zzeact.createElement('p', null, '\xA71: The first rule of Fight Club is: You do not talk about Fight Club.'), Zzeact.createElement('hr', null), Zzeact.createElement('p', null, '\xA72: The second rule of Fight Club is: Always bring cupcakes.')), Zzeact.createElement('div', {
+            className: 'i p'
+          }, Zzeact.createElement('p', null, 'I looked at it and thought ', Zzeact.createElement('i', null, 'This can\'t be real!')), Zzeact.createElement('p', null, Zzeact.createElement('i', {
+            class: 'latin'
+          }, 'Musa'), ' is one of two or three genera in the family ', Zzeact.createElement('i', {
+            class: 'latin'
+          }, 'Musaceae'), '; it includes bananas and plantains.'), Zzeact.createElement('p', null, 'The term ', Zzeact.createElement('i', null, 'bandwidth'), ' describes the measure of how much information can pass through a data connection in a given amount of time.')), Zzeact.createElement('div', {
+            className: 'iframe'
+          }, Zzeact.createElement('iframe', {
+            id: 'inlineFrameExample',
+            title: 'Inline Frame Example',
+            width: '300',
+            height: '200',
+            src: 'https://www.openstreetmap.org/export/embed.html?bbox=-0.004017949104309083%2C51.47612752641776%2C0.00030577182769775396%2C51.478569861898606&layer=mapnik'
+          })), Zzeact.createElement('div', {
+            className: 'img'
+          }, Zzeact.createElement('img', {
+            class: 'fit-picture',
+            src: '/media/examples/grapefruit-slice-332-332.jpg',
+            alt: 'Grapefruit slice atop a pile of other slices'
+          })), Zzeact.createElement('div', {
+            className: 'line svg'
+          }, Zzeact.createElement('svg', {
+            viewBox: '0 0 100 100',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('line', {
+            x1: '0',
+            y1: '80',
+            x2: '100',
+            y2: '20',
+            stroke: 'black'
+          }))), Zzeact.createElement('div', {
+            className: 'nav ol li a h1 p'
+          }, Zzeact.createElement('nav', {
+            class: 'crumbs'
+          }, Zzeact.createElement('ol', null, Zzeact.createElement('li', {
+            class: 'crumb'
+          }, Zzeact.createElement('a', {
+            href: 'bikes'
+          }, 'Bikes')), Zzeact.createElement('li', {
+            class: 'crumb'
+          }, Zzeact.createElement('a', {
+            href: 'bikes/bmx'
+          }, 'BMX')), Zzeact.createElement('li', {
+            class: 'crumb'
+          }, 'Jump Bike 3000'))), Zzeact.createElement('h1', null, 'Jump Bike 3000'), Zzeact.createElement('p', null, 'This BMX bike is a solid step into the pro world. It looks as legit as it rides and is built to polish your skills.')), Zzeact.createElement('div', {
+            className: 'object param'
+          }, Zzeact.createElement('object', {
+            type: 'application/pdf',
+            data: '/media/examples/In-CC0.pdf',
+            width: '250',
+            height: '200'
+          }), Zzeact.createElement('object', {
+            data: 'movie.swf',
+            type: 'application/x-shockwave-flash'
+          }, Zzeact.createElement('param', {
+            name: 'foo',
+            value: 'bar'
+          }))), Zzeact.createElement('div', {
+            className: 'optgroup label select option'
+          }, Zzeact.createElement('label', {
+            for: 'dino-select'
+          }, 'Choose a dinosaur:'), Zzeact.createElement('select', {
+            id: 'dino-select'
+          }, Zzeact.createElement('optgroup', {
+            label: 'Theropods'
+          }, Zzeact.createElement('option', null, 'Tyrannosaurus'), Zzeact.createElement('option', null, 'Velociraptor'), Zzeact.createElement('option', null, 'Deinonychus')), Zzeact.createElement('optgroup', {
+            label: 'Sauropods'
+          }, Zzeact.createElement('option', null, 'Diplodocus'), Zzeact.createElement('option', null, 'Saltasaurus'), Zzeact.createElement('option', null, 'Apatosaurus')))), Zzeact.createElement('div', {
+            className: 'pre'
+          }, Zzeact.createElement('pre', null, 'L          TE A       A C    V R A DOU LOU REUSE QUE TU PORTES ET QUI T\' ORNE O CI VILIS\xC9 OTE-  TU VEUX LA    BIEN SI      RESPI RER       - Apollinaire')), Zzeact.createElement('div', {
+            className: 'small p hr'
+          }, Zzeact.createElement('p', null, 'MDN Web Docs is a learning platform for Web technologies and the software that powers the Web.'), Zzeact.createElement('hr', null), Zzeact.createElement('p', null, Zzeact.createElement('small', null, 'The content is licensed under a Creative Commons Attribution-ShareAlike 2.5 Generic License.'))), Zzeact.createElement('div', {
+            className: 'source video'
+          }, Zzeact.createElement('video', {
+            controls: true,
+            width: '250',
+            height: '200',
+            muted: true
+          }, Zzeact.createElement('source', {
+            src: '/media/examples/flower.webm',
+            type: 'video/webm'
+          }), Zzeact.createElement('source', {
+            src: '/media/examples/flower.mp4',
+            type: 'video/mp4'
+          }), 'This browser does not support the HTML5 video element.')), Zzeact.createElement('div', {
+            className: 'span p'
+          }, Zzeact.createElement('p', null, 'Add the ', Zzeact.createElement('span', {
+            class: 'ingredient'
+          }, 'basil'), ', ', Zzeact.createElement('span', {
+            class: 'ingredient'
+          }, 'pine nuts'), ' and ', Zzeact.createElement('span', {
+            class: 'ingredient'
+          }, 'garlic'), ' to a blender and blend into a paste.'), Zzeact.createElement('p', null, 'Gradually add the ', Zzeact.createElement('span', {
+            class: 'ingredient'
+          }, 'olive oil'), ' while running the blender slowly.')), Zzeact.createElement('div', {
+            className: 'sub p sup var'
+          }, Zzeact.createElement('p', null, 'Almost every developer\'s favorite molecule is C', Zzeact.createElement('sub', null, '8'), 'H', Zzeact.createElement('sub', null, '10'), 'N', Zzeact.createElement('sub', null, '4'), 'O', Zzeact.createElement('sub', null, '2'), ', also known as \'caffeine.\''), Zzeact.createElement('p', null, 'The ', Zzeact.createElement('b', null, 'Pythagorean theorem'), ' is often expressed as the following equation:'), Zzeact.createElement('p', null, Zzeact.createElement('var', null, 'a', Zzeact.createElement('sup', null, '2')), ' + ', Zzeact.createElement('var', null, 'b', Zzeact.createElement('sup', null, '2')), ' = ', Zzeact.createElement('var', null, 'c', Zzeact.createElement('sup', null, '2')))), Zzeact.createElement('div', {
+            className: 'tbody table thead tr th td tfoot'
+          }, Zzeact.createElement('table', null, Zzeact.createElement('thead', null, Zzeact.createElement('tr', null, Zzeact.createElement('th', null, 'Items'), Zzeact.createElement('th', {
+            scope: 'col'
+          }, 'Expenditure'))), Zzeact.createElement('tbody', null, Zzeact.createElement('tr', null, Zzeact.createElement('th', {
+            scope: 'row'
+          }, 'Donuts'), Zzeact.createElement('td', null, '3,000')), Zzeact.createElement('tr', null, Zzeact.createElement('th', {
+            scope: 'row'
+          }, 'Stationary'), Zzeact.createElement('td', null, '18,000'))), Zzeact.createElement('tfoot', null, Zzeact.createElement('tr', null, Zzeact.createElement('th', {
+            scope: 'row'
+          }, 'Totals'), Zzeact.createElement('td', null, '21,000'))))), Zzeact.createElement('div', {
+            className: 'textarea label'
+          }, Zzeact.createElement('label', {
+            for: 'story'
+          }, 'Tell us your story:'), Zzeact.createElement('textarea', {
+            id: 'story',
+            name: 'story',
+            rows: '5',
+            cols: '33'
+          }, 'It was a dark and stormy night...')), Zzeact.createElement('div', {
+            className: 'time p u wbr'
+          }, Zzeact.createElement('p', null, 'The Cure will be celebrating their 40th anniversary on ', Zzeact.createElement('time', {
+            datetime: '2018-07-07'
+          }, 'July 7'), ' in London\'s Hyde Park.'), Zzeact.createElement('p', null, 'The concert starts at ', Zzeact.createElement('time', {
+            datetime: '20:00'
+          }, '20:00'), ' and you\'ll be able to enjoy the band for at least ', Zzeact.createElement('time', {
+            datetime: 'PT2H30M'
+          }, '2h 30m'), '.'), Zzeact.createElement('p', null, 'You could use this element to highlight ', Zzeact.createElement('u', null, 'speling'), ' mistakes, so the writer can ', Zzeact.createElement('u', null, 'corect'), ' them.'), Zzeact.createElement('p', null, 'Fernstra\xDFen', Zzeact.createElement('wbr', null), 'bau', Zzeact.createElement('wbr', null), 'privat', Zzeact.createElement('wbr', null), 'finanzierungs', Zzeact.createElement('wbr', null), 'gesetz')), Zzeact.createElement('div', {
+            className: 'circle svg g path polyline rect text'
+          }, Zzeact.createElement('svg', {
+            viewBox: '0 0 100 100',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('circle', {
+            cx: '50',
+            cy: '50',
+            r: '50'
+          })), Zzeact.createElement('svg', {
+            viewBox: '0 0 100 100',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('g', {
+            fill: 'white',
+            stroke: 'green',
+            'stroke-width': '5'
+          }, Zzeact.createElement('circle', {
+            cx: '40',
+            cy: '40',
+            r: '25'
+          }), Zzeact.createElement('circle', {
+            cx: '60',
+            cy: '60',
+            r: '25'
+          }))), Zzeact.createElement('svg', {
+            viewBox: '0 0 100 100',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('path', {
+            d: 'M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z'
+          })), Zzeact.createElement('svg', {
+            viewBox: '0 0 200 100',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('polyline', {
+            points: '0,100 50,25 50,75 100,0'
+          }), Zzeact.createElement('polyline', {
+            points: '100,100 150,25 150,75 200,0',
+            fill: 'none',
+            stroke: 'black'
+          })), Zzeact.createElement('svg', {
+            viewBox: '0 0 220 100',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('rect', {
+            x: '0',
+            y: '0',
+            width: '100',
+            height: '100'
+          }), Zzeact.createElement('rect', {
+            x: '120',
+            y: '0',
+            width: '100',
+            height: '100',
+            rx: '15',
+            ry: '15'
+          })), Zzeact.createElement('svg', {
+            viewBox: '0 0 240 80',
+            xmlns: 'http://www.w3.org/2000/svg'
+          }, Zzeact.createElement('text', {
+            x: '20',
+            y: '35',
+            class: 'small'
+          }, 'My'), Zzeact.createElement('text', {
+            x: '40',
+            y: '35',
+            class: 'heavy'
+          }, 'cat'), Zzeact.createElement('text', {
+            x: '55',
+            y: '55',
+            class: 'small'
+          }, 'is'), Zzeact.createElement('text', {
+            x: '65',
+            y: '55',
+            class: 'Rrrrr'
+          }, 'Grumpy!'))))
+        }
+      }
+
+      ZzeactDOM.render(
+        Zzeact.createElement(ExampleApplication),
+        document.getElementById('container')
+      )
+    </script>
+  </body>
+</html>

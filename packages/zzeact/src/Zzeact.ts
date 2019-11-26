@@ -1,6 +1,8 @@
 import ZzeactVersion from '@/shared/ZzeactVersion'
 
 import { Component/*, PureComponent */} from './ZzeactBaseClasses'
+console.log('2019/11/26 Reading stop at ZzeactChildren (!!important)')
+import { forEach, map, count, toArray, only } from './ZzeactChildren'
 import {
   createElement,
   createFactory,
@@ -11,6 +13,13 @@ import ZzeactSharedInternals from './ZzeactSharedInternals'
 
 interface Zzeact {
   version: string
+  Children: {
+    map: Function
+    forEach: Function
+    count: Function
+    toArray: Function
+    only: Function
+  }
   createElement: Function
   cloneElement: Function
   createFactory: Function
@@ -18,6 +27,14 @@ interface Zzeact {
 }
 
 const Zzeact = {
+  Children: {
+    map,
+    forEach,
+    count,
+    toArray,
+    only,
+  },
+
   Component,
   version: ZzeactVersion,
   createElement,

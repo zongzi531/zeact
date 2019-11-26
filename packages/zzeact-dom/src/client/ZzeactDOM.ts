@@ -7,7 +7,7 @@ import {
 
 
 // import '../shared/checkZzeact'
-// import './ZzeactDOMClientInjection'
+import './ZzeactDOMClientInjection'
 
 import {
   // computeUniqueAsyncExpiration,

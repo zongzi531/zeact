@@ -116,7 +116,7 @@ export function readContext<T>(
     if (lastContextDependency === null) {
       invariant(
         currentlyRenderingFiber !== null,
-        'Context can only be read while React is rendering. ' +
+        'Context can only be read while Zzeact is rendering. ' +
           'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
           'In function components, you can read it directly in the function body, but not ' +
           'inside Hooks like useReducer() or useMemo().',

@@ -46,7 +46,8 @@ export function getInstanceFromNode(node): any {
   return null
 }
 
-export function getNodeFromInstance(inst): void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getNodeFromInstance(inst): any {
   if (inst.tag === HostComponent || inst.tag === HostText) {
     return inst.stateNode
   }

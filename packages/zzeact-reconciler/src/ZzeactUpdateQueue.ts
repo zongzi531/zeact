@@ -323,6 +323,14 @@ function callCallback(callback, context): void {
   callback.call(context)
 }
 
+export function resetHasForceUpdateBeforeProcessing(): void {
+  hasForceUpdate = false
+}
+
+export function checkHasForceUpdateAfterProcessing(): boolean {
+  return hasForceUpdate
+}
+
 export function commitUpdateQueue<State>(
   finishedWork: Fiber,
   finishedQueue: UpdateQueue<State>,

@@ -86,11 +86,15 @@ import {
 import {
   adoptClassInstance,
   applyDerivedStateFromProps,
-  // constructClassInstance,
+  constructClassInstance,
   mountClassInstance,
-  // resumeMountClassInstance,
-  // updateClassInstance,
+  resumeMountClassInstance,
+  updateClassInstance,
 } from './ZzeactFiberClassComponent'
+import {
+  // readLazyComponentType,
+  resolveDefaultProps,
+} from './ZzeactFiberLazyComponent'
 
 const ZzeactCurrentOwner = ZzeactSharedInternals.ZzeactCurrentOwner
 
@@ -176,6 +180,72 @@ function forceUnmountCurrentAndReconcile(
     nextChildren,
     renderExpirationTime,
   )
+}
+
+function updateClassComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Component: any,
+  nextProps,
+  renderExpirationTime: ExpirationTime,
+): Fiber {
+  let hasContext
+  if (isLegacyContextProvider(Component)) {
+    hasContext = true
+    pushLegacyContextProvider(workInProgress)
+  } else {
+    hasContext = false
+  }
+  prepareToReadContext(workInProgress, renderExpirationTime)
+
+  const instance = workInProgress.stateNode
+  let shouldUpdate
+  if (instance === null) {
+    if (current !== null) {
+      current.alternate = null
+      workInProgress.alternate = null
+      workInProgress.effectTag |= Placement
+    }
+    constructClassInstance(
+      workInProgress,
+      Component,
+      nextProps,
+      renderExpirationTime,
+    )
+    mountClassInstance(
+      workInProgress,
+      Component,
+      nextProps,
+      renderExpirationTime,
+    )
+    shouldUpdate = true
+  } else if (current === null) {
+    shouldUpdate = resumeMountClassInstance(
+      workInProgress,
+      Component,
+      nextProps,
+      renderExpirationTime,
+    )
+  } else {
+    shouldUpdate = updateClassInstance(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      renderExpirationTime,
+    )
+  }
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  const nextUnitOfWork = finishClassComponent(
+    current,
+    workInProgress,
+    Component,
+    shouldUpdate,
+    hasContext,
+    renderExpirationTime,
+  )
+  return nextUnitOfWork
 }
 
 function finishClassComponent(
@@ -345,6 +415,13 @@ function updateHostComponent(current, workInProgress, renderExpirationTime): Fib
     renderExpirationTime,
   )
   return workInProgress.child
+}
+
+function updateHostText(current, workInProgress): null {
+  if (current === null) {
+    tryToClaimNextHydratableInstance(workInProgress)
+  }
+  return null
 }
 
 function mountIndeterminateComponent(
@@ -551,8 +628,6 @@ function beginWork(
       )
     }
     case ClassComponent: {
-      console.log('2019/11/25 Reading stop at ClassComponent (!!important 555:)')
-      debugger
       const Component = workInProgress.type
       const unresolvedProps = workInProgress.pendingProps
       const resolvedProps =

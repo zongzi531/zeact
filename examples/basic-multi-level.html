@@ -16,32 +16,20 @@
     <script>
       class ExampleApplication extends Zzeact.Component {
         render() {
-          return Zzeact.createElement('div', null, 'Zzeact has been successfully running.');
+          const elapsed = Math.round(this.props.elapsed / 100)
+          const seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0')
+          const message = 'Zzeact has been successfully running for ' + seconds + ' seconds.'
+          return Zzeact.createElement('div', null, Zzeact.createElement('p', null, message));
         }
       }
-      ZzeactDOM.render(
-        Zzeact.createElement(ExampleApplication),
-        document.getElementById('root')
-      )
-
-      // const ExampleApplication = Zzeact.createClass({
-      //   render: function () {
-      //     const elapsed = Math.round(this.props.elapsed / 100)
-      //     const seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0')
-      //     const message = 'Zzeact has been successfully running for ' + seconds + ' seconds.'
-      //     return <div>
-      //       <p>{message}</p>
-      //     </div>
-      //   }
-      // })
-      // const start = new Date().getTime()
-      // const debug = setInterval(() => {
-      //   clearInterval(debug)
-      //   Zzeact.renderComponent(
-      //     <ExampleApplication elapsed={new Date().getTime() - start} />,
-      //     document.getElementById('container')
-      //   )
-      // }, 50)
+      const start = new Date().getTime()
+      const debug = setInterval(() => {
+        clearInterval(debug)
+        ZzeactDOM.render(
+          Zzeact.createElement(ExampleApplication, { elapsed: new Date().getTime() - start }),
+          document.getElementById('root')
+        )
+      }, 50)
     </script>
   </body>
 </html>
