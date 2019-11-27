@@ -23,12 +23,20 @@ import {
   // flushSync,
   // flushControlled,
   // injectIntoDevTools,
-  // getPublicRootInstance,
+  getPublicRootInstance,
   // findHostInstance,
   // findHostInstanceWithWarning,
 } from '@/zzeact-reconciler/inline.dom'
 
+import {
+  setRestoreImplementation,
+  // enqueueStateRestore,
+  // restoreStateIfNeeded,
+} from '@/events/ZzeactControlledComponent'
+
 import invariant from '@/shared/invariant'
+
+import { restoreControlledState } from './ZzeactDOMComponent'
 
 import {
   ELEMENT_NODE,
@@ -38,6 +46,9 @@ import {
 } from '../shared/HTMLNodeType'
 
 import { ROOT_ATTRIBUTE_NAME } from '../shared/DOMProperty'
+
+// 这里有很多注入程序
+setRestoreImplementation(restoreControlledState)
 
 export type DOMContainer =
   | (HTMLElement & {
@@ -134,16 +145,16 @@ ZzeactRoot.prototype.render = function(
   // 发现这里与 ZzeactRoot.prototype.legacy_renderSubtreeIntoContainer 功能相同则替换写法
   return this.legacy_renderSubtreeIntoContainer(null, children, callback)
 }
-// ZzeactRoot.prototype.unmount = function(callback?: () => mixed): Work {
-//   const root = this._internalRoot
-//   const work = new ZzeactWork()
-//   callback = callback === undefined ? null : callback
-//   if (callback !== null) {
-//     work.then(callback)
-//   }
-//   updateContainer(null, root, null, work._onCommit)
-//   return work
-// }
+ZzeactRoot.prototype.unmount = function(callback?: () => mixed): Work {
+  const root = this._internalRoot
+  const work = new ZzeactWork()
+  callback = callback === undefined ? null : callback
+  if (callback !== null) {
+    work.then(callback)
+  }
+  updateContainer(null, root, null, work._onCommit)
+  return work
+}
 ZzeactRoot.prototype.legacy_renderSubtreeIntoContainer = function(
   parentComponent: Zzeact$Component,
   children: ZzeactNodeList,
@@ -250,11 +261,11 @@ function legacyRenderSubtreeIntoContainer(
       forceHydrate,
     )
     if (typeof callback === 'function') {
-      // const originalCallback = callback;
-      // callback = function() {
-      //   const instance = getPublicRootInstance(root._internalRoot);
-      //   originalCallback.call(instance);
-      // };
+      const originalCallback = callback
+      callback = function(): void {
+        const instance = getPublicRootInstance(root._internalRoot)
+        originalCallback.call(instance)
+      }
     }
     // // Initial mount should not be batched.
     unbatchedUpdates(() => {
@@ -268,27 +279,26 @@ function legacyRenderSubtreeIntoContainer(
         root.render(children, callback)
       }
     })
+  } else {
+    if (typeof callback === 'function') {
+      const originalCallback = callback
+      callback = function(): void {
+        const instance = getPublicRootInstance(root._internalRoot)
+        originalCallback.call(instance)
+      }
+    }
+    // Update
+    if (parentComponent != null) {
+      root.legacy_renderSubtreeIntoContainer(
+        parentComponent,
+        children,
+        callback,
+      )
+    } else {
+      root.render(children, callback)
+    }
   }
-  // } else {
-  //   if (typeof callback === 'function') {
-  //     const originalCallback = callback
-  //     callback = function() {
-  //       const instance = getPublicRootInstance(root._internalRoot)
-  //       originalCallback.call(instance)
-  //     }
-  //   }
-  //   // Update
-  //   if (parentComponent != null) {
-  //     root.legacy_renderSubtreeIntoContainer(
-  //       parentComponent,
-  //       children,
-  //       callback,
-  //     )
-  //   } else {
-  //     root.render(children, callback)
-  //   }
-  // }
-  // return getPublicRootInstance(root._internalRoot);
+  return getPublicRootInstance(root._internalRoot)
 }
 
 interface ZzeactDOM {
@@ -313,7 +323,24 @@ const ZzeactDOM = {
       false,
       callback,
     )
-  }
+  },
+  unmountComponentAtNode(container: DOMContainer): boolean {
+    invariant(
+      isValidContainer(container),
+      'unmountComponentAtNode(...): Target container is not a DOM element.',
+    )
+
+    if (container._zzeactRootContainer) {
+      unbatchedUpdates(() => {
+        legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
+          container._zzeactRootContainer = null
+        })
+      })
+      return true
+    } else {
+      return false
+    }
+  },
 } as possibleHasDefault<ZzeactDOM>
 
 export default ZzeactDOM

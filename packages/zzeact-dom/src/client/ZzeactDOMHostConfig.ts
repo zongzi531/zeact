@@ -62,6 +62,7 @@ export type Instance = Element
 export type TextInstance = Text
 export type SuspenseInstance = Comment
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance
+export type PublicInstance = Element | Text
 
 type HostContextDev = {
   namespace: string

@@ -1,63 +1,38 @@
 # Zzeact
 
+> **I didn't plan to copy all the functions, this repository is only for learning projects.**
+
 Zzeact is a JavaScript library to learn the source code of React `v16.8.6`.
 
-## ~~Todo~~
-
-That's new version.
-
-## Install
+## ~~Install~~
 
 ```bash
-yarn add zzeact
+yarn add zzeact #0.3.5
 ```
 
-```bash
-npm install zzeact --save
-```
-
-## ~~Quick Start~~
+## Quick Start
 
 ```javascript
-var Examples = Zzeact.createClass({
-  render: () => Zzeact.DOM.p(
-    {
-      style: {
-        margin: 0,
-        fontSize: 16,
-        color: 'red'
-      }
-    },
-    'Zzeact is rendered'
-  )
-})
-
-Zzeact.renderComponent(
-  Examples(null, 'children'),
-  document.getElementById('container')
-)
-```
-
-~~Now, You can using `type="text/jsx"` beacuse i integrated `JSXTransformer.js`~~
-
-```jsx
-/**
- * @jsx Zzeact.DOM
- */
-const ExampleApplication = Zzeact.createClass({
-  render: function () {
-    const style = { margin: 0, fontSize: 16, color: 'red' }
-    return <p style={style}>Zzeact is rendered</p>
+class ExampleApplication extends Zzeact.Component {
+  constructor(props) {
+    super(props)
+    this.handleClick = this.handleClick.bind(this)
   }
-})
+  handleClick() {
+    console.log(this)
+  }
+  render() {
+    return Zzeact.createElement('p', { onClick: this.handleClick }, 'Click me.')
+  }
+}
 
-Zzeact.renderComponent(
-  <ExampleApplication />,
+ZzeactDOM.render(
+  Zzeact.createElement(ExampleApplication),
   document.getElementById('container')
 )
 ```
 
-~~Or, you can see [examples](https://github.com/zongzi531/zzeact/tree/master/examples).~~
+Or, you can see [examples](https://github.com/zongzi531/zzeact/tree/master/examples).
 
 ## License
 

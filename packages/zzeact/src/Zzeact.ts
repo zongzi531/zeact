@@ -1,7 +1,7 @@
 import ZzeactVersion from '@/shared/ZzeactVersion'
 
 import { Component/*, PureComponent */} from './ZzeactBaseClasses'
-console.log('2019/11/26 Reading stop at ZzeactChildren (!!important)')
+import { createRef } from './ZzeactCreateRef'
 import { forEach, map, count, toArray, only } from './ZzeactChildren'
 import {
   createElement,
@@ -20,6 +20,7 @@ interface Zzeact {
     toArray: Function
     only: Function
   }
+  createRef: Function
   createElement: Function
   cloneElement: Function
   createFactory: Function
@@ -35,6 +36,7 @@ const Zzeact = {
     only,
   },
 
+  createRef,
   Component,
   version: ZzeactVersion,
   createElement,

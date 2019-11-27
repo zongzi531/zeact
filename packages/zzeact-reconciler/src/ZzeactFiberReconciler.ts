@@ -4,21 +4,21 @@ import {
   // Instance,
   // TextInstance,
   Container,
-  // PublicInstance,
+  PublicInstance,
 } from '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ReactFiberHostConfig */
 import { ZzeactNodeList } from '@/shared/ZzeactTypes'
 import { ExpirationTime } from './ZzeactFiberExpirationTime'
 
 import { get as getInstance } from '@/shared/ZzeactInstanceMap'
-import { /* HostComponent, */ ClassComponent } from '@/shared/ZzeactWorkTags'
+import { HostComponent, ClassComponent } from '@/shared/ZzeactWorkTags'
 import warningWithoutStack from '@/shared/warningWithoutStack'
+import { getPublicInstance } from '@/zzeact-dom/src/client/ZzeactDOMHostConfig' /* ./ReactFiberHostConfig */
 import {
   findCurrentUnmaskedContext,
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
 } from './ZzeactFiberContext'
-
 import { createFiberRoot } from './ZzeactFiberRoot'
 
 import { createUpdate, enqueueUpdate } from './ZzeactUpdateQueue'
@@ -150,4 +150,19 @@ export {
   // flushInteractiveUpdates,
   // flushControlled,
   // flushSync,
+}
+
+export function getPublicRootInstance(
+  container: OpaqueRoot,
+): Zzeact$Component | PublicInstance | null {
+  const containerFiber = container.current
+  if (!containerFiber.child) {
+    return null
+  }
+  switch (containerFiber.child.tag) {
+    case HostComponent:
+      return getPublicInstance(containerFiber.child.stateNode)
+    default:
+      return containerFiber.child.stateNode
+  }
 }

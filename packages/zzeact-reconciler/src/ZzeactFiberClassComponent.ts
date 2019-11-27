@@ -127,6 +127,13 @@ function constructClassInstance(
   }
 
   const instance = new ctor(props, context)
+  // 这段代码起初是被删掉的，但是他这段代码其实起到了比较关键的作用，会影响到后面 state 初始值
+  // 删掉的原因是因为 state 没有用到
+  // 但是 state 后面的那段赋值是成立的！！！
+  /* const state = */;(workInProgress.memoizedState =
+    instance.state !== null && instance.state !== undefined
+      ? instance.state
+      : null)
   adoptClassInstance(workInProgress, instance)
 
   if (isLegacyContextConsumer) {

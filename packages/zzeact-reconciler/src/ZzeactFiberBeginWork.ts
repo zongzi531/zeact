@@ -211,7 +211,6 @@ function updateClassComponent(
       workInProgress,
       Component,
       nextProps,
-      renderExpirationTime,
     )
     mountClassInstance(
       workInProgress,
